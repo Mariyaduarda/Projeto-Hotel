@@ -45,7 +45,7 @@ class PessoaController {
         }
     }
 
-    public function listar(): array {
+    public function lista(): array {
         try {
             $stmt = $this->pessoa->read();
             $pessoas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -61,7 +61,7 @@ class PessoaController {
             if ($this->pessoa->readOne()) {
                 return ['sucesso' => true, 'dados' => $this->pessoa->toArray()];
             }
-            return ['sucesso' => false, 'erros' => ['Pessoa não encontrada.']];
+            return ['sucesso' => false, 'erros' => ['Pessoa nao encontrada.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -71,7 +71,7 @@ class PessoaController {
         try {
             $this->pessoa->setId($id);
             if (!$this->pessoa->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Pessoa não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Pessoa nao encontrada.']];
             }
 
             $this->pessoa->setNome($dados['nome']);
@@ -102,7 +102,7 @@ class PessoaController {
         try {
             $this->pessoa->setId($id);
             if (!$this->pessoa->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Pessoa não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Pessoa nao encontrada.']];
             }
 
             if ($this->pessoa->delete()) {

@@ -31,14 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar Funcionário</title>
+    <title>Cadastrar Funcionario</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-10 mx-auto">
-                <h2 class="mb-4">Cadastrar Funcionário</h2>
+                <h2 class="mb-4">Cadastrar Funcionario</h2>
                 
                 <?php if ($mensagem): ?>
                     <div class="alert alert-success alert-dismissible fade show">
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <select class="form-select" id="cargo" name="cargo">
                                 <option value="">Selecione...</option>
                                 <?php 
-                                $cargos = ['Recepcionista', 'Gerente', 'Camareira', 'Segurança', 'Manutenção', 'Chef', 'Garçom'];
+                                $cargos = ['Recepcionista', 'Gerente', 'Camareira', 'Seguranca', 'Manutencao', 'Chef', 'Garcom'];
                                 foreach ($cargos as $cargo): 
                                 ?>
                                     <option value="<?= $cargo ?>" <?= ($_POST['cargo'] ?? '') == $cargo ? 'selected' : '' ?>>
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label for="salario" class="form-label">Salário (R$)</label>
+                            <label for="salario" class="form-label">Salario (R$)</label>
                             <input type="number" step="0.01" class="form-control" id="salario" name="salario"
                                    value="<?= htmlspecialchars($_POST['salario'] ?? '') ?>">
                         </div>
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <select class="form-select" id="turno" name="turno">
                                 <option value="">Selecione...</option>
                                 <?php 
-                                $turnos = ['Manhã', 'Tarde', 'Noite', 'Integral'];
+                                $turnos = ['Manha', 'Tarde', 'Noite', 'Integral'];
                                 foreach ($turnos as $turno): 
                                 ?>
                                     <option value="<?= $turno ?>" <?= ($_POST['turno'] ?? '') == $turno ? 'selected' : '' ?>>
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="data_contratacao" class="form-label">Data de Contratação</label>
+                            <label for="data_contratacao" class="form-label">Data de Contratacao</label>
                             <input type="date" class="form-control" id="data_contratacao" name="data_contratacao"
                                    value="<?= htmlspecialchars($_POST['data_contratacao'] ?? date('Y-m-d')) ?>">
                         </div>
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <hr>
 
-                    <h5 class="mt-3 mb-3">Endereço</h5>
+                    <h5 class="mt-3 mb-3">Endereco</h5>
 
                     <div class="row">
                         <div class="col-md-3 mb-3">
@@ -212,9 +212,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Cadastrar Funcionário
+                            <i class="bi bi-check-circle"></i> Cadastrar Funcionario
                         </button>
-                        <a href="listar_funcionario.php" class="btn btn-secondary">
+                        <a href="lista_funcionario.php" class="btn btn-secondary">
                             <i class="bi bi-list"></i> Ver Lista
                         </a>
                         <a href="../index.php" class="btn btn-outline-secondary">

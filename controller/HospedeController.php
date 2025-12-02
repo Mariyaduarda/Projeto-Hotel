@@ -33,10 +33,9 @@ class HospedeController {
         try {
             $this->db->beginTransaction();
 
-            // Criar endereço
-            $this->endereco->setLogradouro($dados['logradouro'] ?? null);
-            $this->endereco->setNumero($dados['numero'] ?? null);
-            $this->endereco->setBairro($dados['bairro'] ?? null);
+            // Criar endereco
+            $this->endereco->setLogradouro($dados['endereco'] ?? null);
+            $this->endereco->setNumero(isset($dados['numero']) ? (int)$dados['numero'] : null);
             $this->endereco->setCidade($dados['cidade']);
             $this->endereco->setEstado($dados['estado']);
             $this->endereco->setPais($dados['pais'] ?? 'Brasil');
@@ -44,14 +43,14 @@ class HospedeController {
 
             if (!$this->endereco->create()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao criar endereço.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao criar endereco.']];
             }
 
             // Criar pessoa
             $this->pessoa->setNome($dados['nome']);
             $this->pessoa->setSexo($dados['sexo'] ?? null);
             $this->pessoa->setDataNascimento($dados['data_nascimento'] ?? null);
-            $this->pessoa->setDocumento($dados['documento'] ?? null);
+            $this->pessoa->setDocumento($dados['cpf'] ?? null);
             $this->pessoa->setTelefone($dados['telefone'] ?? null);
             $this->pessoa->setEmail($dados['email'] ?? null);
             $this->pessoa->setTipoPessoa('hospede');
@@ -62,10 +61,10 @@ class HospedeController {
                 return ['sucesso' => false, 'erros' => ['Erro ao criar pessoa.']];
             }
 
-            // Criar hóspede
+            // criar hospede incluindo obs no historico
             $this->hospede->setIdPessoa($this->pessoa->getId());
             $this->hospede->setPreferencias($dados['preferencias'] ?? null);
-            $this->hospede->setHistorico($dados['historico'] ?? null);
+            $this->hospede->setHistorico($dados['observacoes'] ?? null);
 
             if (!$this->hospede->create()) {
                 $this->db->rollBack();
@@ -102,7 +101,7 @@ class HospedeController {
             if ($dados) {
                 return ['sucesso' => true, 'dados' => $dados];
             }
-            return ['sucesso' => false, 'erros' => ['Hóspede não encontrado.']];
+            return ['sucesso' => false, 'erros' => ['Hóspede nao encontrado.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -116,7 +115,7 @@ class HospedeController {
             $this->pessoa->setId($id);
             if (!$this->pessoa->readOne()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Pessoa não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Pessoa nao encontrada.']];
             }
 
             $this->pessoa->setNome($dados['nome']);

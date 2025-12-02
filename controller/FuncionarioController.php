@@ -32,7 +32,7 @@ class FuncionarioController {
         try {
             $this->db->beginTransaction();
 
-            // 1. Criar endereço primeiro
+            // 1. Criar endereco primeiro
             $this->endereco->setLogradouro($dados['endereco'] ?? null);
             $this->endereco->setNumero($dados['numero'] ?? null);
             $this->endereco->setBairro($dados['bairro'] ?? null);
@@ -43,10 +43,10 @@ class FuncionarioController {
 
             if (!$this->endereco->create()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao criar endereço.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao criar endereco.']];
             }
 
-            // 2. Criar pessoa com o ID do endereço
+            // 2. Criar pessoa com o ID do endereco
             $this->pessoa->setNome($dados['nome']);
             $this->pessoa->setSexo($dados['sexo'] ?? null);
             $this->pessoa->setDataNascimento($dados['data_nascimento'] ?? null);
@@ -68,7 +68,7 @@ class FuncionarioController {
                 return ['sucesso' => false, 'erros' => ['Erro ao criar pessoa.']];
             }
 
-            // 3. Criar funcionário
+            // 3. Criar funcionario
             $this->funcionario->setIdPessoa($this->pessoa->getId());
             $this->funcionario->setCargo($dados['cargo'] ?? null);
             $this->funcionario->setSalario(
@@ -84,7 +84,7 @@ class FuncionarioController {
             );
             $this->funcionario->setTurno($dados['turno'] ?? null);
 
-            // Validar funcionário
+            // Validar funcionario
             $errosFuncionario = $this->funcionario->validar();
             if (!empty($errosFuncionario)) {
                 $this->db->rollBack();
@@ -93,14 +93,14 @@ class FuncionarioController {
 
             if (!$this->funcionario->create()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao criar funcionário.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao criar funcionario.']];
             }
 
             $this->db->commit();
 
             return [
                 'sucesso' => true,
-                'mensagem' => 'Funcionário criado com sucesso!',
+                'mensagem' => 'Funcionario criado com sucesso!',
                 'id' => $this->pessoa->getId()
             ];
 
@@ -110,13 +110,13 @@ class FuncionarioController {
         }
     }
 
-    public function listar(): array {
+    public function lista(): array {
         try {
             $stmt = $this->funcionario->read();
             $funcionarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ['sucesso' => true, 'dados' => $funcionarios];
         } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro ao listar: ' . $e->getMessage()]];
+            return ['sucesso' => false, 'erros' => ['Erro ao lista: ' . $e->getMessage()]];
         }
     }
 
@@ -128,7 +128,7 @@ class FuncionarioController {
             if ($dados) {
                 return ['sucesso' => true, 'dados' => $dados];
             }
-            return ['sucesso' => false, 'erros' => ['Funcionário não encontrado.']];
+            return ['sucesso' => false, 'erros' => ['Funcionario nao encontrado.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -141,7 +141,7 @@ class FuncionarioController {
             $this->pessoa->setId($id);
             if (!$this->pessoa->readOne()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Pessoa não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Pessoa nao encontrada.']];
             }
 
             $this->pessoa->setNome($dados['nome']);
@@ -165,11 +165,11 @@ class FuncionarioController {
 
             if (!$this->funcionario->update()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao atualizar funcionário.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao atualizar funcionario.']];
             }
 
             $this->db->commit();
-            return ['sucesso' => true, 'mensagem' => 'Funcionário atualizado!'];
+            return ['sucesso' => true, 'mensagem' => 'Funcionario atualizado!'];
         } catch (Exception $e) {
             $this->db->rollBack();
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
@@ -183,7 +183,7 @@ class FuncionarioController {
             $this->funcionario->setIdPessoa($id);
             if (!$this->funcionario->delete()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao excluir funcionário.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao excluir funcionario.']];
             }
 
             $this->pessoa->setId($id);
@@ -193,7 +193,7 @@ class FuncionarioController {
             }
 
             $this->db->commit();
-            return ['sucesso' => true, 'mensagem' => 'Funcionário excluído!'];
+            return ['sucesso' => true, 'mensagem' => 'Funcionario excluído!'];
         } catch (Exception $e) {
             $this->db->rollBack();
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];

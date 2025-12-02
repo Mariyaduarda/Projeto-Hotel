@@ -14,7 +14,7 @@ class Pagamento {
     private ?string $metodo_pagamento = null;
     private int     $reserva_idreserva;
 
-    private const METODOS_VALIDOS = ['Dinheiro', 'Cartão de Crédito', 'Cartão de Débito', 'PIX', 'Transferência'];
+    private const METODOS_VALIDOS = ['Dinheiro', 'Cartao de Crédito', 'Cartao de Débito', 'PIX', 'Transferência'];
 
     public function __construct($db){
         $this->conn = $db;
@@ -134,11 +134,11 @@ class Pagamento {
         }
 
         if ($this->valor_total && $this->valor_total < 0) {
-            $erros[] = "Valor total não pode ser negativo.";
+            $erros[] = "Valor total nao pode ser negativo.";
         }
 
         if ($this->metodo_pagamento && !in_array($this->metodo_pagamento, self::METODOS_VALIDOS)) {
-            $erros[] = "Método de pagamento inválido. Valores permitidos: " . implode(', ', self::METODOS_VALIDOS);
+            $erros[] = "Método de pagamento invalido. Valores permitidos: " . implode(', ', self::METODOS_VALIDOS);
         }
 
         return $erros;

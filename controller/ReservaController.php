@@ -30,14 +30,14 @@ class ReservaController {
             $this->reserva->setStatus($dados['status'] ?? 'pendente');
             $this->reserva->setObservacoes($dados['observacoes'] ?? null);
 
-            // Buscar preço do quarto e calcular valor total
+            // Buscar preco do quarto e calcular valor total
             $this->quarto->setId((int)$dados['quarto_id']);
             if ($this->quarto->readOne()) {
                 $preco_diaria = $this->quarto->getPrecoDiaria();
                 $valor_total = $this->reserva->calcularValorTotal($preco_diaria);
                 $this->reserva->setValorTotal($valor_total);
             } else {
-                return ['sucesso' => false, 'erros' => ['Quarto não encontrado.']];
+                return ['sucesso' => false, 'erros' => ['Quarto nao encontrado.']];
             }
 
             $erros = $this->reserva->validar();
@@ -61,13 +61,13 @@ class ReservaController {
     }
 
     // READ ALL
-    public function listar(): array {
+    public function lista(): array {
         try {
             $stmt = $this->reserva->read();
             $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ['sucesso' => true, 'dados' => $reservas];
         } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro ao listar reservas: ' . $e->getMessage()]];
+            return ['sucesso' => false, 'erros' => ['Erro ao lista reservas: ' . $e->getMessage()]];
         }
     }
 
@@ -80,7 +80,7 @@ class ReservaController {
                 return ['sucesso' => true, 'dados' => $this->reserva->toArray()];
             }
 
-            return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
+            return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -92,7 +92,7 @@ class ReservaController {
             $this->reserva->setId($id);
             
             if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
             }
 
             $this->reserva->setHospedeId((int)$dados['hospede_id']);
@@ -134,7 +134,7 @@ class ReservaController {
             $this->reserva->setId($id);
             
             if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
             }
 
             if ($this->reserva->delete()) {
@@ -153,7 +153,7 @@ class ReservaController {
             $this->reserva->setId($id);
             
             if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
             }
 
             if ($this->reserva->cancelar()) {
@@ -172,7 +172,7 @@ class ReservaController {
             $this->reserva->setId($id);
             
             if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
             }
 
             if ($this->reserva->confirmar()) {
@@ -191,7 +191,7 @@ class ReservaController {
             $this->reserva->setId($id);
             
             if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
+                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
             }
 
             if ($this->reserva->concluir()) {
@@ -205,9 +205,9 @@ class ReservaController {
     }
 
     // LISTAR POR PERÍODO
-    public function listarPorPeriodo(string $data_inicio, string $data_fim): array {
+    public function listaPorPeriodo(string $data_inicio, string $data_fim): array {
         try {
-            $reservas = $this->reserva->listarPorPeriodo($data_inicio, $data_fim);
+            $reservas = $this->reserva->listaPorPeriodo($data_inicio, $data_fim);
             return ['sucesso' => true, 'dados' => $reservas];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
@@ -215,9 +215,9 @@ class ReservaController {
     }
 
     // LISTAR POR STATUS
-    public function listarPorStatus(string $status): array {
+    public function listaPorStatus(string $status): array {
         try {
-            $reservas = $this->reserva->listarPorStatus($status);
+            $reservas = $this->reserva->listaPorStatus($status);
             return ['sucesso' => true, 'dados' => $reservas];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];

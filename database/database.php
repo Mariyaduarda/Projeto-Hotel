@@ -27,7 +27,7 @@ class Database {
             $this->conn = new \PDO($dsn, $this->username, $this->password, $options);
             
         } catch(\PDOException $exception) {
-            echo "Erro de conexão: " . $exception->getMessage();
+            echo "Erro de conexao: " . $exception->getMessage();
             die();
         }
 

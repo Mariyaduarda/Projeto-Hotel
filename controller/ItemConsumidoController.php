@@ -14,7 +14,7 @@ class ItemConsumidoController {
 
     public function __construct() {
         $this->itemConsumido = new ItemConsumido();
-        $this->item = \new Item();
+        $this->item = new Item();
     }
 
     // Adicionar item ao consumo
@@ -38,9 +38,9 @@ class ItemConsumidoController {
     }
 
     // Listar itens de um consumo
-    public function listarPorConsumo($consumo_id) {
+    public function listaPorConsumo($consumo_id) {
         try {
-            $resultado = $this->itemConsumido->listarPorConsumo($consumo_id);
+            $resultado = $this->itemConsumido->listaPorConsumo($consumo_id);
             $itens = $resultado->fetchAll(PDO::FETCH_ASSOC);
             
             // Calcular total
@@ -48,8 +48,8 @@ class ItemConsumidoController {
             
             include '../view/consumo/itens_consumo.php';
         } catch(Exception $e) {
-            $_SESSION['erro'] = "Erro ao listar itens: " . $e->getMessage();
-            header("Location: ../view/consumo/listar_consumos.php");
+            $_SESSION['erro'] = "Erro ao lista itens: " . $e->getMessage();
+            header("Location: ../view/consumo/lista_consumos.php");
         }
     }
 

@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2><i class="bi bi-door-open"></i> Cadastrar Quarto</h2>
                     <div>
-                        <a href="listar_quartos.php" class="btn btn-outline-primary">
+                        <a href="lista_quartos.php" class="btn btn-outline-primary">
                             <i class="bi bi-list"></i> Ver Lista
                         </a>
                         <a href="../index.php" class="btn btn-outline-secondary">
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="capacidade_maxima" class="form-label">Capacidade Máxima *</label>
+                                    <label for="capacidade_maxima" class="form-label">Capacidade Maxima *</label>
                                     <input type="number" class="form-control" id="capacidade_maxima" name="capacidade_maxima" 
                                            min="1" max="10" value="<?= htmlspecialchars($_POST['capacidade_maxima'] ?? '2') ?>" required>
                                 </div>
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="valor_diaria" class="form-label">Valor da Diária (R$) *</label>
+                                    <label for="valor_diaria" class="form-label">Valor da Diaria (R$) *</label>
                                     <input type="number" class="form-control" id="valor_diaria" name="valor_diaria" 
                                            step="0.01" min="0" value="<?= htmlspecialchars($_POST['valor_diaria'] ?? '') ?>" required>
                                 </div>
@@ -124,13 +124,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <select class="form-select" id="status" name="status" required>
                                         <option value="disponivel">Disponível</option>
                                         <option value="ocupado">Ocupado</option>
-                                        <option value="manutencao">Manutenção</option>
+                                        <option value="manutencao">Manutencao</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="descricao" class="form-label">Descrição</label>
+                                <label for="descricao" class="form-label">Descricao</label>
                                 <textarea class="form-control" id="descricao" name="descricao" rows="3"
                                           placeholder="Ex: Quarto com ar-condicionado, TV, frigobar..."><?= htmlspecialchars($_POST['descricao'] ?? '') ?></textarea>
                             </div>
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <button type="reset" class="btn btn-secondary">
                                     <i class="bi bi-x-circle"></i> Limpar
                                 </button>
-                                <a href="listar_quartos.php" class="btn btn-outline-primary">
+                                <a href="lista_quartos.php" class="btn btn-outline-primary">
                                     <i class="bi bi-list"></i> Ver Lista
                                 </a>
                             </div>

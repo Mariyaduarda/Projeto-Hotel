@@ -20,7 +20,7 @@ $erros = [];
 $resultado = $controller->buscarPorId((int)$id);
 
 if (!$resultado['sucesso']) {
-    header('Location: listar_quartos.php');
+    header('Location: lista_quartos.php');
     exit;
 }
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="col-md-8 mx-auto">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2><i class="bi bi-pencil-square"></i> Editar Quarto</h2>
-                    <a href="listar_quartos.php" class="btn btn-outline-secondary">
+                    <a href="lista_quartos.php" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                 </div>
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="valor_diaria" class="form-label">Valor Diária *</label>
+                                    <label for="valor_diaria" class="form-label">Valor Diaria *</label>
                                     <input type="number" class="form-control" id="valor_diaria" name="valor_diaria" 
                                            step="0.01" value="<?= htmlspecialchars($quarto['valor_diaria']) ?>" required>
                                 </div>
@@ -132,13 +132,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <select class="form-select" id="status" name="status" required>
                                         <option value="disponivel" <?= $quarto['status'] === 'disponivel' ? 'selected' : '' ?>>Disponível</option>
                                         <option value="ocupado" <?= $quarto['status'] === 'ocupado' ? 'selected' : '' ?>>Ocupado</option>
-                                        <option value="manutencao" <?= $quarto['status'] === 'manutencao' ? 'selected' : '' ?>>Manutenção</option>
+                                        <option value="manutencao" <?= $quarto['status'] === 'manutencao' ? 'selected' : '' ?>>Manutencao</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="descricao" class="form-label">Descrição</label>
+                                <label for="descricao" class="form-label">Descricao</label>
                                 <textarea class="form-control" id="descricao" name="descricao" rows="3"><?= htmlspecialchars($quarto['descricao'] ?? '') ?></textarea>
                             </div>
 
@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-check-circle"></i> Salvar
                                 </button>
-                                <a href="listar_quartos.php" class="btn btn-secondary">
+                                <a href="lista_quartos.php" class="btn btn-secondary">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </a>
                             </div>

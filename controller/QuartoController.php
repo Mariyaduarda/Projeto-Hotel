@@ -41,13 +41,13 @@ class QuartoController {
     }
 
     // READ ALL
-    public function listar(): array {
+    public function lista(): array {
         try {
             $stmt = $this->quarto->read();
             $quartos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return ['sucesso' => true, 'dados' => $quartos];
         } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro ao listar quartos: ' . $e->getMessage()]];
+            return ['sucesso' => false, 'erros' => ['Erro ao lista quartos: ' . $e->getMessage()]];
         }
     }
 
@@ -60,7 +60,7 @@ class QuartoController {
                 return ['sucesso' => true, 'dados' => $this->quarto->toArray()];
             }
 
-            return ['sucesso' => false, 'erros' => ['Quarto não encontrado.']];
+            return ['sucesso' => false, 'erros' => ['Quarto nao encontrado.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -72,7 +72,7 @@ class QuartoController {
             $this->quarto->setId($id);
             
             if (!$this->quarto->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Quarto não encontrado.']];
+                return ['sucesso' => false, 'erros' => ['Quarto nao encontrado.']];
             }
 
             $this->quarto->setNumero((int)$dados['numero']);
@@ -99,7 +99,7 @@ class QuartoController {
             $this->quarto->setId($id);
             
             if (!$this->quarto->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Quarto não encontrado.']];
+                return ['sucesso' => false, 'erros' => ['Quarto nao encontrado.']];
             }
 
             if ($this->quarto->delete()) {

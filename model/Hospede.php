@@ -44,7 +44,13 @@ class Hospede {
 
     // READ ALL
     public function read(): \PDOStatement {
-        $query = "SELECT h.*, p.nome, p.email, p.telefone, p.documento
+        $query = "SELECT h.*,
+                    p.id_pessoa AS id, 
+                    p.nome,
+                    p.email, 
+                    p.telefone, 
+                    p.documento AS cpf,
+                    p.data_criacao
                   FROM " . $this->table_name . " h
                   INNER JOIN pessoa p ON h.id_pessoa = p.id_pessoa
                   ORDER BY p.nome ASC";
@@ -102,7 +108,7 @@ class Hospede {
         ];
     }
 
-    // Buscar hóspede com dados completos (pessoa + endereço)
+    // Buscar hóspede com dados completos (pessoa + endereco)
     public function readComplete(): ?array {
         $query = "SELECT h.*, p.*, e.*
                   FROM " . $this->table_name . " h

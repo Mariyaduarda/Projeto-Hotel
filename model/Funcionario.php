@@ -9,15 +9,15 @@ class Funcionario {
     private $conn;
     private string $table_name = "funcionario";
 
-    private int $id_pessoa;
+    private int     $id_pessoa;
     private ?string $cargo = null;
-    private ?float $salario = null;
+    private ?float  $salario = null;
     private ?string $data_contratacao = null;
-    private ?int $numero_ctps = null;
+    private ?int    $numero_ctps = null;
     private ?string $turno = null;
 
-    private const CARGOS_VALIDOS = ['Recepcionista', 'Gerente', 'Camareira', 'Segurança', 'Manutenção', 'Chef', 'Garçom'];
-    private const TURNOS_VALIDOS = ['Manhã', 'Tarde', 'Noite', 'Integral'];
+    private const CARGOS_VALIDOS = ['Recepcionista', 'Gerente', 'Camareira', 'Seguranca', 'Manutencao', 'Chef', 'Garcom'];
+    private const TURNOS_VALIDOS = ['Manha', 'Tarde', 'Noite', 'Integral'];
 
     public function __construct($db){
         $this->conn = $db;
@@ -157,21 +157,21 @@ class Funcionario {
         $erros = [];
 
         if ($this->cargo && !in_array($this->cargo, self::CARGOS_VALIDOS)) {
-            $erros[] = "Cargo inválido. Valores permitidos: " . implode(', ', self::CARGOS_VALIDOS);
+            $erros[] = "Cargo invalido. Valores permitidos: " . implode(', ', self::CARGOS_VALIDOS);
         }
 
         if ($this->salario && $this->salario < 0) {
-            $erros[] = "Salário não pode ser negativo.";
+            $erros[] = "Salario nao pode ser negativo.";
         }
 
         if ($this->turno && !in_array($this->turno, self::TURNOS_VALIDOS)) {
-            $erros[] = "Turno inválido. Valores permitidos: " . implode(', ', self::TURNOS_VALIDOS);
+            $erros[] = "Turno invalido. Valores permitidos: " . implode(', ', self::TURNOS_VALIDOS);
         }
 
         return $erros;
     }
 
-    // Buscar funcionário com dados completos
+    // Buscar funcionario com dados completos
     public function readComplete(): ?array {
         $query = "SELECT f.*, p.*, e.*
                   FROM " . $this->table_name . " f

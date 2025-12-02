@@ -1,7 +1,7 @@
 <?php
 echo "=== DIAGNÓSTICO DO PROJETO ===\n\n";
 
-// 1. Testa conexão com banco
+// 1. Testa conexao com banco
 echo "1. TESTANDO CONEXÃO COM BANCO DE DADOS\n";
 require_once 'database/database.php';
 
@@ -10,9 +10,9 @@ try {
     $conn = $db->getConnection();
     
     if($conn) {
-        echo "✓ Conexão OK\n\n";
+        echo "✓ Conexao OK\n\n";
     } else {
-        echo "✗ Conexão retornou NULL\n\n";
+        echo "✗ Conexao retornou NULL\n\n";
     }
 } catch (Exception $e) {
     echo "✗ Erro: " . $e->getMessage() . "\n\n";
@@ -35,10 +35,10 @@ foreach($classes as $arquivo => $classe) {
         if(class_exists($classe)) {
             echo "✓ $classe OK\n";
         } else {
-            echo "✗ $classe não encontrada em $arquivo\n";
+            echo "✗ $classe nao encontrada em $arquivo\n";
         }
     } else {
-        echo "✗ Arquivo $arquivo não existe\n";
+        echo "✗ Arquivo $arquivo nao existe\n";
     }
 }
 
@@ -59,7 +59,7 @@ try {
         echo "✗ Nenhuma tabela encontrada\n";
     }
 } catch (Exception $e) {
-    echo "✗ Erro ao listar tabelas: " . $e->getMessage() . "\n";
+    echo "✗ Erro ao lista tabelas: " . $e->getMessage() . "\n";
 }
 
 echo "\n=== FIM DO DIAGNÓSTICO ===\n";

@@ -123,7 +123,7 @@ class Consumo {
         }
 
         if ($this->valor_consumacao && $this->valor_consumacao < 0) {
-            $erros[] = "Valor de consumação não pode ser negativo.";
+            $erros[] = "Valor de consumacao nao pode ser negativo.";
         }
 
         return $erros;
@@ -144,7 +144,7 @@ class Consumo {
     }
 
     // Listar itens do consumo
-    public function listarItens(): array {
+    public function listaItens(): array {
         $query = "SELECT i.*, ic.quantidade 
                   FROM item_has_consumo ic
                   INNER JOIN item i ON ic.item_id_item = i.id_item
@@ -168,7 +168,7 @@ class Consumo {
 
     // Calcular valor total com base nos itens
     public function calcularValorTotal(): float {
-        $itens = $this->listarItens();
+        $itens = $this->listaItens();
         $total = 0;
         
         foreach ($itens as $item) {

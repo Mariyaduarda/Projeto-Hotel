@@ -160,7 +160,7 @@ class Endereco {
         }
 
         if ($this->cep && !preg_match('/^\d{5}-?\d{3}$/', $this->cep)) {
-            $erros[] = "CEP inválido.";
+            $erros[] = "CEP invalido.";
         }
 
         return $erros;

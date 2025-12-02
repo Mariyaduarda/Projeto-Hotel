@@ -171,19 +171,19 @@ class Pessoa {
         }
 
         if ($this->email && !filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $erros[] = "Email inválido.";
+            $erros[] = "Email invalido.";
         }
 
         if ($this->sexo && !in_array($this->sexo, self::SEXOS_VALIDOS)) {
-            $erros[] = "Sexo inválido. Valores permitidos: " . implode(', ', self::SEXOS_VALIDOS);
+            $erros[] = "Sexo invalido. Valores permitidos: " . implode(', ', self::SEXOS_VALIDOS);
         }
 
         if ($this->tipo_pessoa && !in_array($this->tipo_pessoa, self::TIPOS_VALIDOS)) {
-            $erros[] = "Tipo de pessoa inválido.";
+            $erros[] = "Tipo de pessoa invalido.";
         }
 
         if (empty($this->endereco_id_endereco)) {
-            $erros[] = "Endereço é obrigatório.";
+            $erros[] = "Endereco é obrigatório.";
         }
 
         return $erros;

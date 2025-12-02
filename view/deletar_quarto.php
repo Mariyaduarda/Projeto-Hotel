@@ -15,9 +15,9 @@ $controller = new QuartoController();
 $resultado = $controller->deletar((int)$id);
 
 if ($resultado['sucesso']) {
-    header('Location: listar_quartos.php?msg=success');
+    header('Location: lista_quartos.php?msg=success');
 } else {
-    header('Location: listar_quartos.php?msg=error');
+    header('Location: lista_quartos.php?msg=error');
 }
 exit;
 ?>

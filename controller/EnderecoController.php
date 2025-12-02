@@ -37,18 +37,18 @@ class EnderecoController {
             if ($this->endereco->create()) {
                 return [
                     'sucesso' => true, 
-                    'mensagem' => 'Endereço criado com sucesso!',
+                    'mensagem' => 'Endereco criado com sucesso!',
                     'id' => $this->endereco->getId()
                 ];
             }
 
-            return ['sucesso' => false, 'erros' => ['Erro ao criar endereço.']];
+            return ['sucesso' => false, 'erros' => ['Erro ao criar endereco.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
     }
 
-    public function listar(): array {
+    public function lista(): array {
         try {
             $stmt = $this->endereco->read();
             $enderecos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -64,7 +64,7 @@ class EnderecoController {
             if ($this->endereco->readOne()) {
                 return ['sucesso' => true, 'dados' => $this->endereco->toArray()];
             }
-            return ['sucesso' => false, 'erros' => ['Endereço não encontrado.']];
+            return ['sucesso' => false, 'erros' => ['Endereco nao encontrado.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -74,7 +74,7 @@ class EnderecoController {
         try {
             $this->endereco->setId($id);
             if (!$this->endereco->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Endereço não encontrado.']];
+                return ['sucesso' => false, 'erros' => ['Endereco nao encontrado.']];
             }
 
             $this->endereco->setLogradouro($dados['logradouro'] ?? null);
@@ -91,10 +91,10 @@ class EnderecoController {
             }
 
             if ($this->endereco->update()) {
-                return ['sucesso' => true, 'mensagem' => 'Endereço atualizado!'];
+                return ['sucesso' => true, 'mensagem' => 'Endereco atualizado!'];
             }
 
-            return ['sucesso' => false, 'erros' => ['Erro ao atualizar endereço.']];
+            return ['sucesso' => false, 'erros' => ['Erro ao atualizar endereco.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -104,14 +104,14 @@ class EnderecoController {
         try {
             $this->endereco->setId($id);
             if (!$this->endereco->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Endereço não encontrado.']];
+                return ['sucesso' => false, 'erros' => ['Endereco nao encontrado.']];
             }
 
             if ($this->endereco->delete()) {
-                return ['sucesso' => true, 'mensagem' => 'Endereço excluído!'];
+                return ['sucesso' => true, 'mensagem' => 'Endereco excluído!'];
             }
 
-            return ['sucesso' => false, 'erros' => ['Erro ao excluir endereço.']];
+            return ['sucesso' => false, 'erros' => ['Erro ao excluir endereco.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }

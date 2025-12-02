@@ -15,25 +15,25 @@ $funcionario = null;
 
 // Verifica se o ID foi passado
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header('Location: listar_funcionario.php');
+    header('Location: lista_funcionario.php');
     exit;
 }
 
 $id = (int)$_GET['id'];
 
-// Busca os dados do funcionário
+// Busca os dados do funcionario
 $controller = new FuncionarioController();
 $resultado = $controller->buscarPorId($id);
 
 if (!$resultado['sucesso']) {
-    $_SESSION['mensagem_erro'] = 'Funcionário não encontrado.';
-    header('Location: listar_funcionario.php');
+    $_SESSION['mensagem_erro'] = 'Funcionario nao encontrado.';
+    header('Location: lista_funcionario.php');
     exit;
 }
 
 $funcionario = $resultado['dados'];
 
-// Processa o formulário de edição
+// Processa o formulario de edicao
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resultadoUpdate = $controller->atualizar($id, $_POST);
     
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Funcionário</title>
+    <title>Editar Funcionario</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
@@ -61,9 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="row">
             <div class="col-md-10 mx-auto">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Editar Funcionário</h2>
+                    <h2>Editar Funcionario</h2>
                     <div>
-                        <a href="listar_funcionario.php" class="btn btn-secondary">
+                        <a href="lista_funcionario.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Voltar
                         </a>
                     </div>
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <select class="form-select" id="cargo" name="cargo">
                                 <option value="">Selecione...</option>
                                 <?php 
-                                $cargos = ['Recepcionista', 'Gerente', 'Camareira', 'Segurança', 'Manutenção', 'Chef', 'Garçom'];
+                                $cargos = ['Recepcionista', 'Gerente', 'Camareira', 'Seguranca', 'Manutencao', 'Chef', 'Garcom'];
                                 foreach ($cargos as $cargo): 
                                 ?>
                                     <option value="<?= $cargo ?>" <?= ($funcionario['cargo'] ?? '') == $cargo ? 'selected' : '' ?>>
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label for="salario" class="form-label">Salário (R$)</label>
+                            <label for="salario" class="form-label">Salario (R$)</label>
                             <input type="number" step="0.01" class="form-control" id="salario" name="salario"
                                    value="<?= htmlspecialchars($funcionario['salario'] ?? '') ?>">
                         </div>
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <select class="form-select" id="turno" name="turno">
                                 <option value="">Selecione...</option>
                                 <?php 
-                                $turnos = ['Manhã', 'Tarde', 'Noite', 'Integral'];
+                                $turnos = ['Manha', 'Tarde', 'Noite', 'Integral'];
                                 foreach ($turnos as $turno): 
                                 ?>
                                     <option value="<?= $turno ?>" <?= ($funcionario['turno'] ?? '') == $turno ? 'selected' : '' ?>>
@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="data_contratacao" class="form-label">Data de Contratação *</label>
+                            <label for="data_contratacao" class="form-label">Data de Contratacao *</label>
                             <input type="date" class="form-control" id="data_contratacao" name="data_contratacao"
                                    value="<?= htmlspecialchars($funcionario['data_contratacao'] ?? date('Y-m-d')) ?>" required>
                         </div>
@@ -200,26 +200,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="alert alert-info mt-3">
                         <i class="bi bi-info-circle"></i> 
-                        <strong>Nota:</strong> Para alterar o endereço, entre em contato com o administrador do sistema.
+                        <strong>Nota:</strong> Para alterar o endereco, entre em contato com o administrador do sistema.
                     </div>
 
                     <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Salvar Alterações
+                            <i class="bi bi-save"></i> Salvar Alteracões
                         </button>
-                        <a href="listar_funcionario.php" class="btn btn-secondary">
+                        <a href="lista_funcionario.php" class="btn btn-secondary">
                             <i class="bi bi-x-circle"></i> Cancelar
                         </a>
                         <button type="button" class="btn btn-danger ms-auto" onclick="confirmarExclusao(<?= $id ?>)">
-                            <i class="bi bi-trash"></i> Excluir Funcionário
+                            <i class="bi bi-trash"></i> Excluir Funcionario
                         </button>
                     </div>
                 </form>
 
-                <!-- Informações adicionais -->
+                <!-- Informacões adicionais -->
                 <div class="card mt-4">
                     <div class="card-header bg-light">
-                        <i class="bi bi-geo-alt"></i> Informações de Endereço
+                        <i class="bi bi-geo-alt"></i> Informacões de Endereco
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function confirmarExclusao(id) {
-            if (confirm('Tem certeza que deseja EXCLUIR este funcionário?\n\nEsta ação NÃO pode ser desfeita!')) {
+            if (confirm('Tem certeza que deseja EXCLUIR este funcionario?\n\nEsta acao NÃO pode ser desfeita!')) {
                 window.location.href = 'deletar_funcionario.php?id=' + id;
             }
         }

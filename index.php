@@ -36,7 +36,7 @@
             <h1 class="display-4 fw-bold text-primary">
                 <i class="bi bi-building"></i> Sistema de Gerenciamento Hoteleiro
             </h1>
-            <p class="lead text-muted">Gerencie hóspedes, funcionários, quartos e reservas</p>
+            <p class="lead text-muted">Gerencie hóspedes, funcionarios, quartos e reservas</p>
         </div>
 
         <div class="row g-4">
@@ -51,8 +51,16 @@
                             <a href="view/cadastrar_hospede.php" class="btn btn-primary">
                                 <i class="bi bi-plus-circle"></i> Cadastrar
                             </a>
-                            <a href="view/listar_hospedes.php" class="btn btn-outline-primary">
+                            <a href="view/listar_hospede.php" class="btn btn-outline-primary">
                                 <i class="bi bi-list-ul"></i> Listar
+                            </a>
+                            </a>
+                             <a href="view/deletar_hospede.php" class="btn btn-outline-primary">
+                                <i class="bi bi-trash"></i> Deletar
+                            </a>
+                             <a href="view/editar_hospede.php" class="btn btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </a>
                             </a>
                         </div>
                     </div>
@@ -64,14 +72,20 @@
                 <div class="card menu-card border-0 shadow">
                     <div class="card-body text-center p-4">
                         <i class="bi bi-person-badge text-success menu-icon"></i>
-                        <h4 class="card-title">Funcionários</h4>
+                        <h4 class="card-title">Funcionarios</h4>
                         <p class="card-text text-muted">Gerencie equipe do hotel</p>
                         <div class="d-grid gap-2">
                             <a href="view/cadastrar_funcionario.php" class="btn btn-success">
-                                <i class="bi bi-plus-circle"></i> Cadastrar
+                                <i class="bi bi-plus-circle"></i>Cadastrar
                             </a>
-                            <a href="view/listar_funcionarios.php" class="btn btn-outline-success">
+                            <a href="view/lista_funcionario.php" class="btn btn-outline-success">
                                 <i class="bi bi-list-ul"></i> Listar
+                            </a>
+                             <a href="view/deletar_funcionario.php" class="btn btn-outline-success">
+                                <i class="bi bi-trash"></i> Deletar
+                            </a>
+                             <a href="view/editar_funcionario.php" class="btn btn-outline-success">
+                                <i class="bi bi-pencil-square"></i> Editar
                             </a>
                         </div>
                     </div>
@@ -89,14 +103,14 @@
                             <a href="view/cadastrar_quarto.php" class="btn btn-warning">
                                 <i class="bi bi-plus-circle"></i> Cadastrar
                             </a>
-                            <a href="view/listar_quartos.php" class="btn btn-outline-warning">
+                            <a href="view/lista_quartos.php" class="btn btn-outline-warning">
                                 <i class="bi bi-list-ul"></i> Listar
                             </a>
-                            <a href="view/deletar_quarto.php" class="btn btn-outline-danger">
-                                <i class="bi bi-search"></i> Deletar
+                            <a href="view/deletar_quarto.php" class="btn btn-outline-warning">
+                                <i class="bi bi-trash"></i> Deletar
                             </a>
-                            <a href="view/editar_quartos.php" class="btn btn-outline-danger">
-                                <i class="bi bi-search"></i> Editar
+                            <a href="view/editar_quartos.php" class="btn btn-outline-warning">
+                                <i class="bi bi-pencil-square"></i> Editar
                             </a>
                         </div>
                     </div>
@@ -114,7 +128,7 @@
                             <a href="view/criar_reserva.php" class="btn btn-danger">
                                 <i class="bi bi-plus-circle"></i> Nova Reserva
                             </a>
-                            <a href="view/listar_reservas.php" class="btn btn-outline-danger">
+                            <a href="view/lista_reservas.php" class="btn btn-outline-danger">
                                 <i class="bi bi-list-ul"></i> Listar
                             </a>
                         </div>
@@ -122,43 +136,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- INFORMAÇÕES ADICIONAIS -->
-        <div class="row mt-5">
-            <div class="col-md-12">
-                <div class="card border-0 shadow">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-info-circle text-info"></i> Informações do Sistema
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-3 text-center p-3">
-                                <i class="bi bi-shield-check text-success" style="font-size: 2rem;"></i>
-                                <p class="mb-0 mt-2"><strong>Sistema Seguro</strong></p>
-                                <small class="text-muted">Validações completas</small>
-                            </div>
-                            <div class="col-md-3 text-center p-3">
-                                <i class="bi bi-database text-primary" style="font-size: 2rem;"></i>
-                                <p class="mb-0 mt-2"><strong>Banco de Dados</strong></p>
-                                <small class="text-muted">PDO + MySQL</small>
-                            </div>
-                            <div class="col-md-3 text-center p-3">
-                                <i class="bi bi-code-slash text-warning" style="font-size: 2rem;"></i>
-                                <p class="mb-0 mt-2"><strong>Arquitetura MVC</strong></p>
-                                <small class="text-muted">Código organizado</small>
-                            </div>
-                            <div class="col-md-3 text-center p-3">
-                                <i class="bi bi-palette text-danger" style="font-size: 2rem;"></i>
-                                <p class="mb-0 mt-2"><strong>Interface Moderna</strong></p>
-                                <small class="text-muted">Bootstrap 5</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+        
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

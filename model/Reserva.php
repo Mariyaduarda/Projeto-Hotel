@@ -54,12 +54,12 @@ class Reserva {
 
     // Métodos adicionais para compatibilidade com o controller
     public function setValorTotal(float $valor): void { $this->valor_reserva = $valor; }
-    public function setNumHospedes(int $num): void { /* Campo não existe na tabela */ }
-    public function setObservacoes(?string $obs): void { /* Campo não existe na tabela */ }
+    public function setNumHospedes(int $num): void { /* Campo nao existe na tabela */ }
+    public function setObservacoes(?string $obs): void { /* Campo nao existe na tabela */ }
 
     // CREATE
     public function create(): bool {
-        // Define data_reserva como hoje se não foi informada
+        // Define data_reserva como hoje se nao foi informada
         if (empty($this->data_reserva)) {
             $this->data_reserva = date('Y-m-d');
         }
@@ -196,7 +196,7 @@ class Reserva {
         }
 
         if (empty($this->id_funcionario)) {
-            $erros[] = "Funcionário é obrigatório.";
+            $erros[] = "Funcionario é obrigatório.";
         }
 
         if (empty($this->data_checkin_previsto)) {
@@ -214,13 +214,13 @@ class Reserva {
         }
 
         if (!in_array($this->status, self::STATUS_VALIDOS)) {
-            $erros[] = "Status inválido.";
+            $erros[] = "Status invalido.";
         }
 
         return $erros;
     }
 
-    // Calcular valor total baseado no preço da diária e número de dias
+    // Calcular valor total baseado no preco da diaria e número de dias
     public function calcularValorTotal(float $preco_diaria): float {
         if (empty($this->data_checkin_previsto) || empty($this->data_checkout_previsto)) {
             return 0;
@@ -268,7 +268,7 @@ class Reserva {
     }
 
     // Listar por período
-    public function listarPorPeriodo(string $data_inicio, string $data_fim): array {
+    public function listaPorPeriodo(string $data_inicio, string $data_fim): array {
         $query = "SELECT r.*, 
                          p_hosp.nome as nome_hospede,
                          q.numero as numero_quarto
@@ -288,7 +288,7 @@ class Reserva {
     }
 
     // Listar por status
-    public function listarPorStatus(string $status): array {
+    public function listaPorStatus(string $status): array {
         $query = "SELECT r.*, 
                          p_hosp.nome as nome_hospede,
                          q.numero as numero_quarto

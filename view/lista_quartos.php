@@ -12,7 +12,7 @@ require_once __DIR__ . '/../utils/Validacoes.php';
 require_once __DIR__ . '/../utils/Formatter.php';
 
 $controller = new QuartoController();
-$resultado = $controller->listar();
+$resultado = $controller->lista();
 
 $quartos = $resultado['sucesso'] ? $resultado['dados'] : [];
 ?>
@@ -54,9 +54,9 @@ $quartos = $resultado['sucesso'] ? $resultado['dados'] : [];
                                     <th>Andar</th>
                                     <th>Tipo</th>
                                     <th>Capacidade</th>
-                                    <th>Valor/Diária</th>
+                                    <th>Valor/Diaria</th>
                                     <th>Status</th>
-                                    <th class="text-center">Ações</th>
+                                    <th class="text-center">Acões</th>
                                 </tr>
                             </thead>
                             <tbody>

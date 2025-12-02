@@ -8,8 +8,8 @@ session_start();
 
 // Verifica se o ID foi passado
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    $_SESSION['mensagem_erro'] = 'ID do funcionário não informado.';
-    header('Location: listar_funcionario.php');
+    $_SESSION['mensagem_erro'] = 'ID do funcionario nao informado.';
+    header('Location: lista_funcionario.php');
     exit;
 }
 
@@ -26,7 +26,7 @@ if ($resultado['sucesso']) {
 }
 
 // Redireciona de volta para a lista
-header('Location: listar_funcionario.php');
+header('Location: lista_funcionario.php');
 exit;
 
 ?>

@@ -3,7 +3,7 @@
 class Formatter {
     
     /**
-     * Formata CPF no padrão 000.000.000-00
+     * Formata CPF no padrao 000.000.000-00
      */
     public static function formatarCPF(?string $cpf): string {
         if (empty($cpf)) {
@@ -23,7 +23,7 @@ class Formatter {
     }
     
     /**
-     * Formata telefone no padrão (00) 00000-0000
+     * Formata telefone no padrao (00) 00000-0000
      */
     public static function formatarTelefone(?string $telefone): string {
         if (empty($telefone)) {
@@ -50,7 +50,7 @@ class Formatter {
     }
     
     /**
-     * Formata CEP no padrão 00000-000
+     * Formata CEP no padrao 00000-000
      */
     public static function formatarCEP(?string $cep): string {
         if (empty($cep)) {
@@ -67,7 +67,7 @@ class Formatter {
     }
     
     /**
-     * Formata data no padrão brasileiro dd/mm/yyyy
+     * Formata data no padrao brasileiro dd/mm/yyyy
      */
     public static function formatarData(?string $data): string {
         if (empty($data)) {
@@ -83,7 +83,7 @@ class Formatter {
     }
     
     /**
-     * Formata data e hora no padrão brasileiro dd/mm/yyyy HH:mm
+     * Formata data e hora no padrao brasileiro dd/mm/yyyy HH:mm
      */
     public static function formatarDataHora(?string $data): string {
         if (empty($data)) {
@@ -99,7 +99,7 @@ class Formatter {
     }
     
     /**
-     * Formata valor monetário no padrão brasileiro
+     * Formata valor monetario no padrao brasileiro
      */
     public static function formatarDinheiro(?float $valor): string {
         if ($valor === null) {
@@ -110,7 +110,7 @@ class Formatter {
     }
     
     /**
-     * Remove formatação de CPF
+     * Remove formatacao de CPF
      */
     public static function limparCPF(?string $cpf): ?string {
         if (empty($cpf)) {
@@ -121,7 +121,7 @@ class Formatter {
     }
     
     /**
-     * Remove formatação de telefone
+     * Remove formatacao de telefone
      */
     public static function limparTelefone(?string $telefone): ?string {
         if (empty($telefone)) {
@@ -132,7 +132,7 @@ class Formatter {
     }
     
     /**
-     * Remove formatação de CEP
+     * Remove formatacao de CEP
      */
     public static function limparCEP(?string $cep): ?string {
         if (empty($cep)) {
