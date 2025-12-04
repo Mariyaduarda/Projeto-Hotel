@@ -1,16 +1,16 @@
 <?php
+require_once __DIR__ . '/../controller/FuncionarioController.php';
+require_once __DIR__ . '/../utils/Formatter.php';
 
-use controller\QuartoController;
-
-require_once __DIR__ . '/../controller/QuartoController.php';
+use Controller\FuncionarioController;
 
 session_start();
 
 $mensagem = '';
 $erros = [];
-$quartos = [];
+$funcionarios = [];
 
-$controller = new QuartoController();
+$controller = new FuncionarioController();
 
 // Se for DELETE
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
@@ -22,10 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Buscar todos os quartos
+// Buscar todos os funcionários
 $resultado = $controller->lista();
 if ($resultado['sucesso']) {
-    $quartos = $resultado['dados'];
+    $funcionarios = $resultado['dados'];
 } else {
     $erros = $resultado['erros'];
 }
@@ -35,7 +35,7 @@ if ($resultado['sucesso']) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listar Quartos - Palácio Lumière</title>
+    <title>Listar Funcionários - Palácio Lumière</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -115,7 +115,7 @@ if ($resultado['sucesso']) {
         <!-- Conteúdo Principal -->
         <main class="main-content">
             <header class="main-header">
-                <h1><i class="fas fa-list"></i> Listar Quartos</h1>
+                <h1><i class="fas fa-list"></i> Listar Funcionários</h1>
             </header>
 
             <div class="form-container">
@@ -142,60 +142,47 @@ if ($resultado['sucesso']) {
 
                 <!-- Botões de Ação -->
                 <div class="btn-group-actions" style="margin-bottom: 30px;">
-                    <a href="cadastrar_quarto.php" class="btn-primary-custom">
-                        <i class="fas fa-plus-circle"></i> Novo Quarto
+                    <a href="cadastrar_funcionario.php" class="btn-primary-custom">
+                        <i class="fas fa-plus-circle"></i> Novo Funcionário
                     </a>
                     <a href="../index.php" class="btn-secondary-custom">
                         <i class="fas fa-home"></i> Voltar ao Painel
                     </a>
                 </div>
 
-                <!-- Tabela de Quartos -->
-                <?php if (!empty($quartos)): ?>
+                <!-- Tabela de Funcionários -->
+                <?php if (!empty($funcionarios)): ?>
                     <div class="table-container">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th><i class="fas fa-hashtag"></i> Nº</th>
-                                    <th><i class="fas fa-arrow-up"></i> Andar</th>
-                                    <th><i class="fas fa-bed"></i> Tipo</th>
-                                    <th><i class="fas fa-users"></i> Capacidade</th>
-                                    <th><i class="fas fa-money-bill-wave"></i> Valor/Dia</th>
-                                    <th><i class="fas fa-info-circle"></i> Status</th>
+                                    <th><i class="fas fa-hashtag"></i> ID</th>
+                                    <th><i class="fas fa-user"></i> Nome</th>
+                                    <th><i class="fas fa-id-card"></i> CPF</th>
+                                    <th><i class="fas fa-envelope"></i> Email</th>
+                                    <th><i class="fas fa-briefcase"></i> Cargo</th>
+                                    <th><i class="fas fa-clock"></i> Turno</th>
                                     <th><i class="fas fa-cog"></i> Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($quartos as $quarto): ?>
+                                <?php foreach ($funcionarios as $funcionario): ?>
                                     <tr>
-                                        <td class="text-center"><strong><?= htmlspecialchars($quarto['numero']) ?></strong></td>
-                                        <td class="text-center"><?= htmlspecialchars($quarto['andar']) ?>º</td>
-                                        <td><?= htmlspecialchars($quarto['tipo_quarto']) ?></td>
-                                        <td class="text-center"><?= htmlspecialchars($quarto['capacidade_maxima']) ?> pes.</td>
-                                        <td>R$ <?= number_format($quarto['valor_diaria'], 2, ',', '.') ?></td>
-                                        <td class="text-center">
-                                            <?php
-                                            $statusBadges = [
-                                                'disponivel' => ['bg', '#d4edda', '#155724'],
-                                                'ocupado' => ['bg', '#f8d7da', '#721c24'],
-                                                'manutencao' => ['bg', '#fff3cd', '#856404']
-                                            ];
-                                            $status = $quarto['status'] ?? 'disponivel';
-                                            $badge = $statusBadges[$status] ?? $statusBadges['disponivel'];
-                                            ?>
-                                            <span style="background-color: <?= $badge[1] ?>; color: <?= $badge[2] ?>; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
-                                                <?= ucfirst($status) ?>
-                                            </span>
-                                        </td>
+                                        <td class="text-center"><?= htmlspecialchars($funcionario['id'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($funcionario['nome'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($funcionario['cpf'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($funcionario['email'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($funcionario['cargo'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($funcionario['turno'] ?? '') ?></td>
                                         <td class="table-actions">
-                                            <a href="editar_quartos.php?id=<?= $quarto['id_quarto'] ?>" 
+                                            <a href="editar_funcionario.php?id=<?= $funcionario['id'] ?>" 
                                                class="btn-action btn-edit" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <form method="POST" action="" style="display: inline;" 
-                                                  onsubmit="return confirm('Tem certeza que deseja deletar este quarto?');">
+                                                  onsubmit="return confirm('Tem certeza que deseja deletar este funcionário?');">
                                                 <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id" value="<?= $quarto['id_quarto'] ?>">
+                                                <input type="hidden" name="id" value="<?= $funcionario['id'] ?>">
                                                 <button type="submit" class="btn-action btn-delete" title="Deletar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -208,15 +195,15 @@ if ($resultado['sucesso']) {
                     </div>
 
                     <div class="table-footer">
-                        <p>Total de quartos: <strong><?= count($quartos) ?></strong></p>
+                        <p>Total de funcionários: <strong><?= count($funcionarios) ?></strong></p>
                     </div>
                 <?php else: ?>
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
-                        <h3>Nenhum quarto cadastrado</h3>
-                        <p>Comece a adicionar quartos ao seu hotel.</p>
-                        <a href="cadastrar_quarto.php" class="btn-primary-custom">
-                            <i class="fas fa-plus-circle"></i> Cadastrar Primeiro Quarto
+                        <h3>Nenhum funcionário cadastrado</h3>
+                        <p>Comece a adicionar funcionários ao seu hotel.</p>
+                        <a href="cadastrar_funcionario.php" class="btn-primary-custom">
+                            <i class="fas fa-plus-circle"></i> Cadastrar Primeiro Funcionário
                         </a>
                     </div>
                 <?php endif; ?>

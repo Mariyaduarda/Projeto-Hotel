@@ -83,25 +83,44 @@ class HospedeController {
         }
     }
 
-    public function listar(): array {
+    public function lista(): array {
         try {
-            $stmt = $this->hospede->read();
+            $sql = "SELECT p.id_pessoa as id, p.nome, p.email, p.telefone, p.documento, p.data_nascimento,
+                           p.sexo, p.data_criacao, e.cidade, e.estado
+                    FROM pessoa p
+                    LEFT JOIN endereco e ON p.endereco_id_endereco = e.id_endereco
+                    WHERE p.tipo_pessoa = 'hospede'
+                    ORDER BY p.nome ASC";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
             $hospedes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
             return ['sucesso' => true, 'dados' => $hospedes];
         } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
+            return ['sucesso' => false, 'erros' => ['Erro ao listar hóspedes: ' . $e->getMessage()]];
         }
     }
 
     public function buscarPorId(int $id): array {
         try {
-            $this->hospede->setIdPessoa($id);
-            $dados = $this->hospede->readComplete();
+            $sql = "SELECT p.id_pessoa as id, p.nome, p.email, p.telefone, p.documento, 
+                           p.data_nascimento, p.sexo, p.data_criacao as data_cadastro,
+                           e.logradouro, e.numero, e.bairro, e.cidade, e.estado, e.cep,
+                           h.preferencias, h.historico as observacoes
+                    FROM pessoa p
+                    LEFT JOIN endereco e ON p.endereco_id_endereco = e.id_endereco
+                    LEFT JOIN hospede h ON p.id_pessoa = h.id_pessoa
+                    WHERE p.id_pessoa = ? AND p.tipo_pessoa = 'hospede'";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
+            $dados = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($dados) {
                 return ['sucesso' => true, 'dados' => $dados];
             }
-            return ['sucesso' => false, 'erros' => ['Hóspede nao encontrado.']];
+            return ['sucesso' => false, 'erros' => ['Hóspede não encontrado.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -111,37 +130,53 @@ class HospedeController {
         try {
             $this->db->beginTransaction();
 
+            // Buscar o endereco_id da pessoa
+            $sql = "SELECT endereco_id_endereco FROM pessoa WHERE id_pessoa = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
+            $enderecoId = $stmt->fetchColumn();
+
+            // Atualizar endereco (se existir)
+            if ($enderecoId) {
+                $sql = "UPDATE endereco SET logradouro = ?, numero = ?, bairro = ?, 
+                        cidade = ?, estado = ?, cep = ? WHERE id_endereco = ?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    $dados['endereco'] ?? null,
+                    isset($dados['numero']) ? (int)$dados['numero'] : null,
+                    $dados['bairro'] ?? null,
+                    $dados['cidade'],
+                    $dados['estado'],
+                    $dados['cep'] ?? null,
+                    $enderecoId
+                ]);
+            }
+
             // Atualizar pessoa
-            $this->pessoa->setId($id);
-            if (!$this->pessoa->readOne()) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Pessoa nao encontrada.']];
-            }
-
-            $this->pessoa->setNome($dados['nome']);
-            $this->pessoa->setSexo($dados['sexo'] ?? null);
-            $this->pessoa->setDataNascimento($dados['data_nascimento'] ?? null);
-            $this->pessoa->setDocumento($dados['documento'] ?? null);
-            $this->pessoa->setTelefone($dados['telefone'] ?? null);
-            $this->pessoa->setEmail($dados['email'] ?? null);
-
-            if (!$this->pessoa->update()) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao atualizar pessoa.']];
-            }
+            $sql = "UPDATE pessoa SET nome = ?, sexo = ?, data_nascimento = ?, documento = ?, 
+                    telefone = ?, email = ? WHERE id_pessoa = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $dados['nome'],
+                $dados['sexo'] ?? null,
+                $dados['data_nascimento'] ?? null,
+                $dados['documento'] ?? null,
+                $dados['telefone'] ?? null,
+                $dados['email'] ?? null,
+                $id
+            ]);
 
             // Atualizar hóspede
-            $this->hospede->setIdPessoa($id);
-            $this->hospede->setPreferencias($dados['preferencias'] ?? null);
-            $this->hospede->setHistorico($dados['historico'] ?? null);
-
-            if (!$this->hospede->update()) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao atualizar hóspede.']];
-            }
+            $sql = "UPDATE hospede SET preferencias = ?, historico = ? WHERE id_pessoa = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $dados['preferencias'] ?? null,
+                $dados['observacoes'] ?? null,
+                $id
+            ]);
 
             $this->db->commit();
-            return ['sucesso' => true, 'mensagem' => 'Hóspede atualizado!'];
+            return ['sucesso' => true, 'mensagem' => 'Hóspede atualizado com sucesso!'];
         } catch (Exception $e) {
             $this->db->rollBack();
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
@@ -152,20 +187,18 @@ class HospedeController {
         try {
             $this->db->beginTransaction();
 
-            $this->hospede->setIdPessoa($id);
-            if (!$this->hospede->delete()) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao excluir hóspede.']];
-            }
+            // Deletar hóspede
+            $sql = "DELETE FROM hospede WHERE id_pessoa = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
-            $this->pessoa->setId($id);
-            if (!$this->pessoa->delete()) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao excluir pessoa.']];
-            }
+            // Deletar pessoa
+            $sql = "DELETE FROM pessoa WHERE id_pessoa = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
             $this->db->commit();
-            return ['sucesso' => true, 'mensagem' => 'Hóspede excluído!'];
+            return ['sucesso' => true, 'mensagem' => 'Hóspede excluído com sucesso!'];
         } catch (Exception $e) {
             $this->db->rollBack();
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];

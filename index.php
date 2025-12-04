@@ -1,145 +1,358 @@
+<?php
+require_once __DIR__ . '/database/Database.php';
+
+use database\Database;
+
+date_default_timezone_set('America/Sao_Paulo');
+$hoje = date('Y-m-d');
+
+try {
+    $db = new Database();
+    $conn = $db->getConnection();
+
+    // 1. CONTAR CHECK-INS HOJE (apenas reservas confirmadas)
+    $sqlCheckinsHoje = "SELECT COUNT(*) as total FROM reserva 
+                        WHERE DATE(data_checkin_previsto) = ? 
+                        AND status = 'confirmada'";
+    $stmtCheckinsHoje = $conn->prepare($sqlCheckinsHoje);
+    $stmtCheckinsHoje->execute([$hoje]);
+    $resultCheckinsHoje = $stmtCheckinsHoje->fetch();
+    $checkins_hoje = $resultCheckinsHoje['total'] ?? 0;
+
+    // 2. CONTAR CHECK-OUTS HOJE (apenas reservas confirmadas ou finalizadas)
+    $sqlCheckoutsHoje = "SELECT COUNT(*) as total FROM reserva 
+                         WHERE DATE(data_checkout_previsto) = ?
+                         AND (status = 'confirmada' OR status = 'finalizada')";
+    $stmtCheckoutsHoje = $conn->prepare($sqlCheckoutsHoje);
+    $stmtCheckoutsHoje->execute([$hoje]);
+    $resultCheckoutsHoje = $stmtCheckoutsHoje->fetch();
+    $checkouts_hoje = $resultCheckoutsHoje['total'] ?? 0;
+
+    // 3. CALCULAR TAXA DE OCUPAÇÃO (baseado em reservas ativas)
+    // Contar total de quartos
+    $sqlTotalQuartos = "SELECT COUNT(*) as total FROM quarto";
+    $stmtTotalQuartos = $conn->prepare($sqlTotalQuartos);
+    $stmtTotalQuartos->execute();
+    $resultTotalQuartos = $stmtTotalQuartos->fetch();
+    $total_quartos = $resultTotalQuartos['total'] ?? 1;
+
+    // Contar quartos ocupados (reservas confirmadas que estão acontecendo hoje)
+    $sqlQuartosOcupados = "SELECT COUNT(DISTINCT id_quarto) as ocupados 
+                           FROM reserva 
+                           WHERE DATE(data_checkin_previsto) <= ? 
+                           AND DATE(data_checkout_previsto) >= ?
+                           AND status = 'confirmada'";
+    $stmtQuartosOcupados = $conn->prepare($sqlQuartosOcupados);
+    $stmtQuartosOcupados->execute([$hoje, $hoje]);
+    $resultQuartosOcupados = $stmtQuartosOcupados->fetch();
+    $ocupados = $resultQuartosOcupados['ocupados'] ?? 0;
+
+    // Calcular taxa de ocupação
+    $taxa_ocupacao = $total_quartos > 0 ? ($ocupados / $total_quartos) * 100 : 0;
+
+    // 4. RESERVAS EM ANDAMENTO (CHECK-IN <= HOJE E CHECKOUT >= HOJE, STATUS CONFIRMADA)
+    $sqlReservasAndamento = "SELECT r.*, 
+                             p.nome as hospede_nome, 
+                             p.email, 
+                             p.telefone,
+                             q.numero as quarto_numero, 
+                             q.tipo_quarto
+                             FROM reserva r
+                             INNER JOIN hospede ho ON r.id_hospede = ho.id_pessoa
+                             INNER JOIN pessoa p ON ho.id_pessoa = p.id_pessoa
+                             INNER JOIN quarto q ON r.id_quarto = q.id_quarto
+                             WHERE DATE(r.data_checkin_previsto) <= ? 
+                             AND DATE(r.data_checkout_previsto) >= ?
+                             AND r.status = 'confirmada'
+                             ORDER BY r.data_checkout_previsto ASC";
+    $stmtReservasAndamento = $conn->prepare($sqlReservasAndamento);
+    $stmtReservasAndamento->execute([$hoje, $hoje]);
+    $reservas_em_andamento = $stmtReservasAndamento->fetchAll();
+
+    // 5. PRÓXIMAS RESERVAS (CHECK-IN > HOJE, STATUS CONFIRMADA OU PENDENTE)
+    $sqlProximasReservas = "SELECT r.*, 
+                            p.nome as hospede_nome, 
+                            p.email, 
+                            p.telefone,
+                            q.numero as quarto_numero, 
+                            q.tipo_quarto
+                            FROM reserva r
+                            INNER JOIN hospede ho ON r.id_hospede = ho.id_pessoa
+                            INNER JOIN pessoa p ON ho.id_pessoa = p.id_pessoa
+                            INNER JOIN quarto q ON r.id_quarto = q.id_quarto
+                            WHERE DATE(r.data_checkin_previsto) > ?
+                            AND (r.status = 'confirmada' OR r.status = 'pendente')
+                            ORDER BY r.data_checkin_previsto ASC
+                            LIMIT 10";
+    $stmtProximasReservas = $conn->prepare($sqlProximasReservas);
+    $stmtProximasReservas->execute([$hoje]);
+    $reservas_futuras = $stmtProximasReservas->fetchAll();
+
+    // Imagens de quartos aleatórias
+    $imagens_quartos = ['assets/img/quarto1.png', 'assets/img/quarto2.png', 'assets/img/quarto3.png'];
+
+} catch (Exception $e) {
+    error_log("Erro ao buscar dados do painel: " . $e->getMessage());
+    $checkins_hoje = 0;
+    $checkouts_hoje = 0;
+    $taxa_ocupacao = 0;
+    $reservas_em_andamento = [];
+    $reservas_futuras = [];
+    $imagens_quartos = ['assets/img/quarto1.png', 'assets/img/quarto2.png', 'assets/img/quarto3.png'];
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gerenciamento Hoteleiro</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body {
-          background-color: #a8d5ba;
-min-height: 100vh;
-
-
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .menu-card {
-            transition: transform 0.3s, box-shadow 0.3s;
-            height: 100%;
-        }
-        .menu-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .menu-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        .header-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-    </style>
+    <title>Painel de Controle - Palácio Lumière</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-    <div class="container py-5">
-        <div class="header-card p-4 mb-5 text-center">
-            <h1 class="display-4 fw-bold text-primary">
-                <i class="bi bi-building"></i> Sistema de Gerenciamento Hoteleiro
-            </h1>
-            <p class="lead text-muted">Gerencie hóspedes, funcionarios, quartos e reservas</p>
+    <div class="dashboard-wrapper">
+        <!-- Menu Lateral (Sidebar) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.php"><img src="assets/img/logo.png" alt="Palácio Lumière Logo"></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="index.php" class="active"><i class="fas fa-tachometer-alt"></i> Painel</a>
+                </div>
+
+                <!-- Hóspedes Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-users"></i> Hóspedes</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="view/cadastrar_hospede.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="view/listar_hospede.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="view/editar_hospede.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="view/deletar_hospede.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <!-- Funcionários Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-briefcase"></i> Funcionários</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="view/cadastrar_funcionario.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="view/lista_funcionario.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="view/editar_funcionario.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="view/deletar_funcionario.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <!-- Quartos Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-door-open"></i> Quartos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="view/cadastrar_quarto.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="view/lista_quartos.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="view/editar_quartos.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="view/deletar_quarto.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <!-- Reservas Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-calendar-alt"></i> Reservas</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="criar_reserva.php"><i class="fas fa-plus"></i> Nova Reserva</a>
+                        <a href="lista_reservas.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_reserva.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_reserva.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="view/relatorios/relatorio_hospede.php"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Painel de Controle</h1>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                    <i class="fas fa-calendar-day"></i> Hoje: <?= date('d/m/Y') ?>
+                </p>
+            </header>
+
+            <!-- Cards de Resumo -->
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-arrow-right-to-bracket"></i></div>
+                    <div class="card-info">
+                        <span class="card-value"><?= $checkins_hoje ?></span>
+                        <span class="card-label">Check-ins Hoje</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-arrow-right-from-bracket"></i></div>
+                    <div class="card-info">
+                        <span class="card-value"><?= $checkouts_hoje ?></span>
+                        <span class="card-label">Check-outs Hoje</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-bed"></i></div>
+                    <div class="card-info">
+                        <span class="card-value"><?= number_format($taxa_ocupacao, 1) ?>%</span>
+                        <span class="card-label">Taxa de Ocupação</span>
+                        <small style="font-size: 0.75rem; color: #999; display: block; margin-top: 5px;">
+                            <?= $ocupados ?> de <?= $total_quartos ?> quartos
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Reservas em Andamento -->
+            <section class="reservation-section">
+                <h2>Em Andamento</h2>
+                <div class="reservation-grid">
+                    <?php if (empty($reservas_em_andamento)): ?>
+                        <p class="no-reservations">Nenhuma reserva em andamento no momento.</p>
+                    <?php else: foreach ($reservas_em_andamento as $reserva): 
+                        $imagem = $imagens_quartos[array_rand($imagens_quartos)];
+                    ?>
+                        <div class="reservation-card">
+                            <img src="<?= htmlspecialchars($imagem) ?>" alt="Quarto <?= htmlspecialchars($reserva['quarto_numero']) ?>">
+                            <div class="card-overlay">
+                                <h4>Quarto <?= htmlspecialchars($reserva['quarto_numero']) ?> - <?= htmlspecialchars($reserva['tipo_quarto']) ?></h4>
+                                <p>Check-out: <?= date('d/m/Y', strtotime($reserva['data_checkout_previsto'])) ?></p>
+                                <button class="btn-view-details"
+                                    data-id="<?= htmlspecialchars($reserva['idreserva']) ?>"
+                                    data-checkin="<?= date('d/m/Y', strtotime($reserva['data_checkin_previsto'])) ?>"
+                                    data-checkout="<?= date('d/m/Y', strtotime($reserva['data_checkout_previsto'])) ?>"
+                                    data-quarto="Quarto <?= htmlspecialchars($reserva['quarto_numero']) ?> - <?= htmlspecialchars($reserva['tipo_quarto']) ?>"
+                                    data-hospede="<?= htmlspecialchars($reserva['hospede_nome']) ?>"
+                                    data-email="<?= htmlspecialchars($reserva['email']) ?>"
+                                    data-telefone="<?= htmlspecialchars($reserva['telefone']) ?>"
+                                    data-valor="R$ <?= number_format($reserva['valor_reserva'], 2, ',', '.') ?>"
+                                >
+                                    Ver Detalhes
+                                </button>
+                                <span class="booking-id">ID: <?= htmlspecialchars($reserva['idreserva']) ?></span>
+                            </div>
+                        </div>
+                    <?php endforeach; endif; ?>
+                </div>
+            </section>
+
+            <!-- Seção de Próximas Reservas -->
+            <section class="reservation-section">
+                <h2>Próximas Reservas</h2>
+                <div class="reservation-grid">
+                    <?php if (empty($reservas_futuras)): ?>
+                        <p class="no-reservations">Nenhuma reserva futura agendada.</p>
+                    <?php else: foreach ($reservas_futuras as $reserva): 
+                        $imagem = $imagens_quartos[array_rand($imagens_quartos)];
+                    ?>
+                        <div class="reservation-card">
+                            <img src="<?= htmlspecialchars($imagem) ?>" alt="Quarto <?= htmlspecialchars($reserva['quarto_numero']) ?>">
+                            <div class="card-overlay">
+                                <h4>Quarto <?= htmlspecialchars($reserva['quarto_numero']) ?> - <?= htmlspecialchars($reserva['tipo_quarto']) ?></h4>
+                                <p>Check-in: <?= date('d/m/Y', strtotime($reserva['data_checkin_previsto'])) ?></p>
+                                <button class="btn-view-details"
+                                    data-id="<?= htmlspecialchars($reserva['idreserva']) ?>"
+                                    data-checkin="<?= date('d/m/Y', strtotime($reserva['data_checkin_previsto'])) ?>"
+                                    data-checkout="<?= date('d/m/Y', strtotime($reserva['data_checkout_previsto'])) ?>"
+                                    data-quarto="Quarto <?= htmlspecialchars($reserva['quarto_numero']) ?> - <?= htmlspecialchars($reserva['tipo_quarto']) ?>"
+                                    data-hospede="<?= htmlspecialchars($reserva['hospede_nome']) ?>"
+                                    data-email="<?= htmlspecialchars($reserva['email']) ?>"
+                                    data-telefone="<?= htmlspecialchars($reserva['telefone']) ?>"
+                                    data-valor="R$ <?= number_format($reserva['valor_reserva'], 2, ',', '.') ?>"
+                                >
+                                    Ver Detalhes
+                                </button>
+                                <span class="booking-id">ID: <?= htmlspecialchars($reserva['idreserva']) ?></span>
+                            </div>
+                        </div>
+                    <?php endforeach; endif; ?>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de Detalhes da Reserva -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header-cinzel">
+                <h2>Detalhes da Reserva <span id="modalReservaId"></span></h2>
+            </div>
+            <div class="modal-body-columns">
+                <div class="column">
+                    <h4><i class="fas fa-user"></i> Informações do Hóspede</h4>
+                    <p><strong>Nome:</strong> <span id="modalHospedeNome"></span></p>
+                    <p><strong>Email:</strong> <span id="modalHospedeEmail"></span></p>
+                    <p><strong>Telefone:</strong> <span id="modalHospedeTelefone"></span></p>
+                </div>
+                <div class="column">
+                    <h4><i class="fas fa-calendar-alt"></i> Informações da Reserva</h4>
+                    <p><strong>Quarto:</strong> <span id="modalQuartoNome"></span></p>
+                    <p><strong>Check-in:</strong> <span id="modalCheckin"></span></p>
+                    <p><strong>Check-out:</strong> <span id="modalCheckout"></span></p>
+                    <p><strong>Valor Total:</strong> <span id="modalValor"></span></p>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div class="row g-4">
-            <!-- HÓSPEDES -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card menu-card border-0 shadow">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-person-circle text-primary menu-icon"></i>
-                        <h4 class="card-title">Hóspedes</h4>
-                        <p class="card-text text-muted">Gerencie cadastro de hóspedes</p>
-                        <div class="d-grid gap-2">
-                            <a href="view/cadastrar_hospede.php" class="btn btn-primary">
-                                <i class="bi bi-plus-circle"></i> Cadastrar
-                            </a>
-                            <a href="view/listar_hospede.php" class="btn btn-outline-primary">
-                                <i class="bi bi-list-ul"></i> Listar
-                            </a>
-                            </a>
-                             <a href="view/deletar_hospede.php" class="btn btn-outline-primary">
-                                <i class="bi bi-trash"></i> Deletar
-                            </a>
-                             <a href="view/editar_hospede.php" class="btn btn-outline-primary">
-                                <i class="bi bi-pencil-square"></i> Editar
-                            </a>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <script>
+    function toggleDropdown(element) {
+        const menu = element.nextElementSibling;
+        menu.classList.toggle('show');
+        element.classList.toggle('active');
+    }
 
-            <!-- FUNCIONÁRIOS -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card menu-card border-0 shadow">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-person-badge text-success menu-icon"></i>
-                        <h4 class="card-title">Funcionarios</h4>
-                        <p class="card-text text-muted">Gerencie equipe do hotel</p>
-                        <div class="d-grid gap-2">
-                            <a href="view/cadastrar_funcionario.php" class="btn btn-success">
-                                <i class="bi bi-plus-circle"></i>Cadastrar
-                            </a>
-                            <a href="view/lista_funcionario.php" class="btn btn-outline-success">
-                                <i class="bi bi-list-ul"></i> Listar
-                            </a>
-                             <a href="view/deletar_funcionario.php" class="btn btn-outline-success">
-                                <i class="bi bi-trash"></i> Deletar
-                            </a>
-                             <a href="view/editar_funcionario.php" class="btn btn-outline-success">
-                                <i class="bi bi-pencil-square"></i> Editar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('detailsModal');
+        const btns = document.querySelectorAll('.btn-view-details');
+        const span = modal.querySelector('.modal-close');
 
-            <!-- QUARTOS -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card menu-card border-0 shadow">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-door-open text-warning menu-icon"></i>
-                        <h4 class="card-title">Quartos</h4>
-                        <p class="card-text text-muted">Gerencie quartos disponíveis</p>
-                        <div class="d-grid gap-2">
-                            <a href="view/cadastrar_quarto.php" class="btn btn-warning">
-                                <i class="bi bi-plus-circle"></i> Cadastrar
-                            </a>
-                            <a href="view/lista_quartos.php" class="btn btn-outline-warning">
-                                <i class="bi bi-list-ul"></i> Listar
-                            </a>
-                            <a href="view/deletar_quarto.php" class="btn btn-outline-warning">
-                                <i class="bi bi-trash"></i> Deletar
-                            </a>
-                            <a href="view/editar_quartos.php" class="btn btn-outline-warning">
-                                <i class="bi bi-pencil-square"></i> Editar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        btns.forEach(btn => {
+            btn.onclick = function() {
+                document.getElementById('modalReservaId').innerText = '#' + this.dataset.id;
+                document.getElementById('modalHospedeNome').innerText = this.dataset.hospede;
+                document.getElementById('modalHospedeEmail').innerText = this.dataset.email;
+                document.getElementById('modalHospedeTelefone').innerText = this.dataset.telefone;
+                document.getElementById('modalQuartoNome').innerText = this.dataset.quarto;
+                document.getElementById('modalCheckin').innerText = this.dataset.checkin;
+                document.getElementById('modalCheckout').innerText = this.dataset.checkout;
+                document.getElementById('modalValor').innerText = this.dataset.valor;
+                
+                modal.style.display = 'block';
+            }
+        });
 
-            <!-- RESERVAS -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card menu-card border-0 shadow">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-calendar-check text-danger menu-icon"></i>
-                        <h4 class="card-title">Reservas</h4>
-                        <p class="card-text text-muted">Gerencie reservas do hotel</p>
-                        <div class="d-grid gap-2">
-                            <a href="view/criar_reserva.php" class="btn btn-danger">
-                                <i class="bi bi-plus-circle"></i> Nova Reserva
-                            </a>
-                            <a href="view/lista_reservas.php" class="btn btn-outline-danger">
-                                <i class="bi bi-list-ul"></i> Listar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    });
+    </script>
 </body>
 </html>

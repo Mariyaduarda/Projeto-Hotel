@@ -1,35 +1,42 @@
 <?php
 
 use controller\QuartoController;
-use database\Database;
-use model\Quarto;
 
 require_once __DIR__ . '/../controller/QuartoController.php';
-require_once __DIR__ . '/../database/Database.php';  
+
+session_start();
 
 $mensagem = '';
 $erros = [];
+$quarto = null;
+
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    header('Location: lista_quartos.php');
+    exit;
+}
+
+$id = (int)$_GET['id'];
+
+$controller = new QuartoController();
+$resultado = $controller->buscarPorId($id);
+
+if (!$resultado['sucesso']) {
+    $_SESSION['mensagem_erro'] = 'Quarto não encontrado.';
+    header('Location: lista_quartos.php');
+    exit;
+}
+
+$quarto = $resultado['dados'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $controller = new QuartoController();
+    $resultadoUpdate = $controller->atualizar($id, $_POST);
     
-    $dados = [
-        'numero' => $_POST['numero'] ?? 0,
-        'andar' => $_POST['andar'] ?? 0,
-        'tipo_quarto' => $_POST['tipo_quarto'] ?? '',
-        'valor_diaria' => $_POST['valor_diaria'] ?? 0,
-        'capacidade_maxima' => $_POST['capacidade_maxima'] ?? 1,
-        'descricao' => $_POST['descricao'] ?? null,
-        'status' => $_POST['status'] ?? 'disponivel'
-    ];
-    
-    $resultado = $controller->criar($dados);
-    
-    if ($resultado['sucesso']) {
-        $mensagem = $resultado['mensagem'];
-        $_POST = [];
+    if ($resultadoUpdate['sucesso']) {
+        $mensagem = $resultadoUpdate['mensagem'];
+        $resultado = $controller->buscarPorId($id);
+        $quarto = $resultado['dados'];
     } else {
-        $erros = $resultado['erros'];
+        $erros = $resultadoUpdate['erros'];
     }
 }
 ?>
@@ -38,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar Quarto - Palácio Lumière</title>
+    <title>Editar Quarto - Palácio Lumière</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -118,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Conteúdo Principal -->
         <main class="main-content">
             <header class="main-header">
-                <h1><i class="fas fa-door-open"></i> Cadastrar Quarto</h1>
+                <h1><i class="fas fa-edit"></i> Editar Quarto Nº <?= htmlspecialchars($quarto['numero']) ?></h1>
             </header>
 
             <div class="form-container">
@@ -154,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label for="numero" class="form-label required-field">Número do Quarto</label>
                                 <input type="number" class="form-control" id="numero" name="numero" 
-                                       value="<?= htmlspecialchars($_POST['numero'] ?? '') ?>" required>
+                                       value="<?= htmlspecialchars($quarto['numero']) ?>" required>
                             </div>
                         </div>
 
@@ -162,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label for="andar" class="form-label required-field">Andar</label>
                                 <input type="number" class="form-control" id="andar" name="andar" 
-                                       value="<?= htmlspecialchars($_POST['andar'] ?? '') ?>" required>
+                                       value="<?= htmlspecialchars($quarto['andar']) ?>" required>
                             </div>
                         </div>
 
@@ -170,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label for="capacidade_maxima" class="form-label required-field">Capacidade Máxima</label>
                                 <input type="number" class="form-control" id="capacidade_maxima" name="capacidade_maxima" 
-                                       min="1" max="10" value="<?= htmlspecialchars($_POST['capacidade_maxima'] ?? '2') ?>" required>
+                                       min="1" max="10" value="<?= htmlspecialchars($quarto['capacidade_maxima']) ?>" required>
                             </div>
                         </div>
                     </div>
@@ -186,10 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="tipo_quarto" class="form-label required-field">Tipo de Quarto</label>
                                 <select class="form-select" id="tipo_quarto" name="tipo_quarto" required>
                                     <option value="">Selecione...</option>
-                                    <option value="Standard" <?= ($_POST['tipo_quarto'] ?? '') == 'Standard' ? 'selected' : '' ?>>Standard</option>
-                                    <option value="Luxo" <?= ($_POST['tipo_quarto'] ?? '') == 'Luxo' ? 'selected' : '' ?>>Luxo</option>
-                                    <option value="Suite" <?= ($_POST['tipo_quarto'] ?? '') == 'Suite' ? 'selected' : '' ?>>Suíte</option>
-                                    <option value="Deluxe" <?= ($_POST['tipo_quarto'] ?? '') == 'Deluxe' ? 'selected' : '' ?>>Deluxe</option>
+                                    <option value="Standard" <?= ($quarto['tipo_quarto'] ?? '') == 'Standard' ? 'selected' : '' ?>>Standard</option>
+                                    <option value="Luxo" <?= ($quarto['tipo_quarto'] ?? '') == 'Luxo' ? 'selected' : '' ?>>Luxo</option>
+                                    <option value="Suite" <?= ($quarto['tipo_quarto'] ?? '') == 'Suite' ? 'selected' : '' ?>>Suíte</option>
+                                    <option value="Deluxe" <?= ($quarto['tipo_quarto'] ?? '') == 'Deluxe' ? 'selected' : '' ?>>Deluxe</option>
                                 </select>
                             </div>
                         </div>
@@ -198,9 +205,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-group">
                                 <label for="status" class="form-label required-field">Status</label>
                                 <select class="form-select" id="status" name="status" required>
-                                    <option value="disponivel" <?= ($_POST['status'] ?? '') == 'disponivel' ? 'selected' : '' ?>>Disponível</option>
-                                    <option value="ocupado" <?= ($_POST['status'] ?? '') == 'ocupado' ? 'selected' : '' ?>>Ocupado</option>
-                                    <option value="manutencao" <?= ($_POST['status'] ?? '') == 'manutencao' ? 'selected' : '' ?>>Manutenção</option>
+                                    <option value="disponivel" <?= ($quarto['status'] ?? '') == 'disponivel' ? 'selected' : '' ?>>Disponível</option>
+                                    <option value="ocupado" <?= ($quarto['status'] ?? '') == 'ocupado' ? 'selected' : '' ?>>Ocupado</option>
+                                    <option value="manutencao" <?= ($quarto['status'] ?? '') == 'manutencao' ? 'selected' : '' ?>>Manutenção</option>
                                 </select>
                             </div>
                         </div>
@@ -213,9 +220,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-group">
                         <label for="valor_diaria" class="form-label required-field">Valor (R$)</label>
-                        <input type="text" class="form-control" id="valor_diaria" name="valor_diaria_display" 
-                            placeholder="R$ 0,00"
-                            value="<?= htmlspecialchars($_POST['valor_diaria'] ?? '') ?>" required>
+                        <input type="number" class="form-control" id="valor_diaria" name="valor_diaria" 
+                               step="0.01" min="0" value="<?= htmlspecialchars($quarto['valor_diaria']) ?>" required>
                     </div>
 
                     <!-- Descrição -->
@@ -226,13 +232,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-group">
                         <label for="descricao" class="form-label">Descrição do Quarto</label>
                         <textarea class="form-control" id="descricao" name="descricao" rows="4"
-                                  placeholder="Ex: Quarto com ar-condicionado, TV 32\", frigobar, Wi-Fi, vista para jardim..."><?= htmlspecialchars($_POST['descricao'] ?? '') ?></textarea>
+                                  placeholder="Ex: Quarto com ar-condicionado, TV 32\", frigobar, Wi-Fi, vista para jardim..."><?= htmlspecialchars($quarto['descricao'] ?? '') ?></textarea>
                     </div>
 
                     <!-- Botões -->
                     <div class="btn-group-actions">
                         <button type="submit" class="btn-primary-custom">
-                            <i class="fas fa-save"></i> Cadastrar Quarto
+                            <i class="fas fa-save"></i> Salvar Alterações
                         </button>
                         <a href="lista_quartos.php" class="btn-secondary-custom">
                             <i class="fas fa-list"></i> Ver Lista
@@ -240,6 +246,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <a href="../index.php" class="btn-secondary-custom">
                             <i class="fas fa-home"></i> Voltar ao Painel
                         </a>
+                        <button type="button" class="btn-secondary-custom" 
+                                style="background-color: #ffebee; color: #d32f2f; border-color: #ffebee; margin-left: auto;"
+                                onclick="confirmarExclusao(<?= $id ?>)">
+                            <i class="fas fa-trash"></i> Excluir Quarto
+                        </button>
                     </div>
                 </form>
             </div>
@@ -253,66 +264,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         element.classList.toggle('active');
     }
 
-    // Permitir apenas números - Número do Quarto
-    document.getElementById('numero').addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/\D/g, '');
-    });
-
-    // Permitir apenas números - Andar
-    document.getElementById('andar').addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/\D/g, '');
-    });
-
-    // Permitir apenas números - Capacidade Máxima
-    document.getElementById('capacidade_maxima').addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/\D/g, '');
-    });
-
-    // Formatação de Valor da Diária: R$ 1.234,56 (IGUAL AO SALÁRIO)
-    document.getElementById('valor_diaria').addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        
-        if (value.length === 0) {
-            e.target.value = '';
-            return;
+    function confirmarExclusao(id) {
+        if (confirm('⚠️ ATENÇÃO!\n\nTem certeza que deseja EXCLUIR este quarto?\n\nEsta ação NÃO pode ser desfeita!')) {
+            window.location.href = 'deletar_quarto.php?id=' + id;
         }
-        
-        // Garante 2 casas decimais
-        if (value.length <= 2) {
-            value = ('00' + value).slice(-2);
-        } else {
-            value = value.slice(0, -2) + ',' + value.slice(-2);
-        }
-        
-        // Adiciona separador de milhares
-        const partes = value.split(',');
-        partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        
-        e.target.value = 'R$ ' + partes.join(',');
-    });
-
-    // Remover formatação antes de enviar
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const valorInput = document.getElementById('valor_diaria');
-        
-        // Extrair apenas os números e converter
-        let valor = valorInput.value.replace(/\D/g, '');
-        if (valor) {
-            valor = (parseInt(valor) / 100).toFixed(2);
-        }
-        
-        // Criar input hidden com o valor correto
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'valor_diaria';
-        hiddenInput.value = valor;
-        
-        // Remover o name do input visível
-        valorInput.removeAttribute('name');
-        
-        // Adicionar o hidden ao form
-        this.appendChild(hiddenInput);
-    });
+    }
     </script>
 </body>
 </html>

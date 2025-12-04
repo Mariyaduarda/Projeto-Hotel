@@ -32,21 +32,21 @@ class FuncionarioController {
         try {
             $this->db->beginTransaction();
 
-            // 1. Criar endereco primeiro
+            // Criar endereço
             $this->endereco->setLogradouro($dados['endereco'] ?? null);
-            $this->endereco->setNumero($dados['numero'] ?? null);
+            $this->endereco->setNumero(!empty($dados['numero']) ? (int)filter_var($dados['numero'], FILTER_SANITIZE_NUMBER_INT) : null);
             $this->endereco->setBairro($dados['bairro'] ?? null);
-            $this->endereco->setCidade($dados['cidade'] ?? null);
-            $this->endereco->setEstado($dados['estado'] ?? null);
+            $this->endereco->setCidade($dados['cidade']);
+            $this->endereco->setEstado($dados['estado']);
             $this->endereco->setPais($dados['pais'] ?? 'Brasil');
             $this->endereco->setCep($dados['cep'] ?? null);
 
             if (!$this->endereco->create()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao criar endereco.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao criar endereço.']];
             }
 
-            // 2. Criar pessoa com o ID do endereco
+            // Criar pessoa
             $this->pessoa->setNome($dados['nome']);
             $this->pessoa->setSexo($dados['sexo'] ?? null);
             $this->pessoa->setDataNascimento($dados['data_nascimento'] ?? null);
@@ -56,54 +56,48 @@ class FuncionarioController {
             $this->pessoa->setTipoPessoa('funcionario');
             $this->pessoa->setEnderecoId($this->endereco->getId());
 
-            // Validar pessoa DEPOIS de setar o endereco_id
-            $errosPessoa = $this->pessoa->validar();
-            if (!empty($errosPessoa)) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => $errosPessoa];
-            }
-
             if (!$this->pessoa->create()) {
                 $this->db->rollBack();
                 return ['sucesso' => false, 'erros' => ['Erro ao criar pessoa.']];
             }
 
-            // 3. Criar funcionario
+            // Criar funcionário
             $this->funcionario->setIdPessoa($this->pessoa->getId());
             $this->funcionario->setCargo($dados['cargo'] ?? null);
-            $this->funcionario->setSalario(
-                isset($dados['salario']) && $dados['salario'] !== '' 
-                    ? (float)$dados['salario'] 
-                    : null
-            );
-            $this->funcionario->setDataContratacao($dados['data_contratacao'] ?? date('Y-m-d'));
-            $this->funcionario->setNumeroCtps(
-                isset($dados['numero_ctps']) && $dados['numero_ctps'] !== '' 
-                    ? (int)$dados['numero_ctps'] 
-                    : null
-            );
-            $this->funcionario->setTurno($dados['turno'] ?? null);
-
-            // Validar funcionario
-            $errosFuncionario = $this->funcionario->validar();
-            if (!empty($errosFuncionario)) {
-                $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => $errosFuncionario];
+            
+            // Converter salário formatado para float
+            $salario = null;
+            if (!empty($dados['salario'])) {
+                $salario = str_replace(['R$ ', '.', ','], ['', '', '.'], $dados['salario']);
+                $salario = floatval($salario);
             }
+            $this->funcionario->setSalario($salario);
+            
+            $this->funcionario->setTurno($dados['turno'] ?? null);
+            $this->funcionario->setDataContratacao($dados['data_contratacao'] ?? date('Y-m-d'));
+            
+            // Converter CTPS: pega apenas os primeiros 7 dígitos (antes da barra)
+            $ctps = null;
+            if (!empty($dados['numero_ctps'])) {
+                // Remove tudo que não é número
+                $ctps = preg_replace('/\D/', '', $dados['numero_ctps']);
+                // Pega apenas os primeiros 7 dígitos
+                $ctps = substr($ctps, 0, 7);
+                $ctps = !empty($ctps) ? (int)$ctps : null;
+            }
+            $this->funcionario->setNumeroCTPS($ctps);
 
             if (!$this->funcionario->create()) {
                 $this->db->rollBack();
-                return ['sucesso' => false, 'erros' => ['Erro ao criar funcionario.']];
+                return ['sucesso' => false, 'erros' => ['Erro ao criar funcionário.']];
             }
 
             $this->db->commit();
-
             return [
-                'sucesso' => true,
-                'mensagem' => 'Funcionario criado com sucesso!',
+                'sucesso' => true, 
+                'mensagem' => 'Funcionário criado com sucesso!',
                 'id' => $this->pessoa->getId()
             ];
-
         } catch (Exception $e) {
             $this->db->rollBack();
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
@@ -158,9 +152,28 @@ class FuncionarioController {
 
             $this->funcionario->setIdPessoa($id);
             $this->funcionario->setCargo($dados['cargo'] ?? null);
-            $this->funcionario->setSalario($dados['salario'] ?? null);
+            
+            // Converter salário formatado para float
+            $salario = null;
+            if (!empty($dados['salario'])) {
+                $salario = str_replace(['R$ ', '.', ','], ['', '', '.'], $dados['salario']);
+                $salario = floatval($salario);
+            }
+            $this->funcionario->setSalario($salario);
+            
             $this->funcionario->setDataContratacao($dados['data_contratacao']);
-            $this->funcionario->setNumeroCtps($dados['numero_ctps'] ?? null);
+            
+            // Converter CTPS: pega apenas os primeiros 7 dígitos (antes da barra)
+            $ctps = null;
+            if (!empty($dados['numero_ctps'])) {
+                // Remove tudo que não é número
+                $ctps = preg_replace('/\D/', '', $dados['numero_ctps']);
+                // Pega apenas os primeiros 7 dígitos
+                $ctps = substr($ctps, 0, 7);
+                $ctps = !empty($ctps) ? (int)$ctps : null;
+            }
+            $this->funcionario->setNumeroCtps($ctps);
+            
             $this->funcionario->setTurno($dados['turno'] ?? null);
 
             if (!$this->funcionario->update()) {
@@ -176,8 +189,38 @@ class FuncionarioController {
         }
     }
 
+    /**
+     * Verifica se o funcionário tem reservas vinculadas
+     */
+    private function temReservasVinculadas(int $id): bool {
+        try {
+            $query = "SELECT COUNT(*) as total FROM reserva WHERE id_funcionario = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $resultado['total'] > 0;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
     public function deletar(int $id): array {
         try {
+            // Verificar se o funcionário tem reservas vinculadas
+            if ($this->temReservasVinculadas($id)) {
+                return [
+                    'sucesso' => false, 
+                    'erros' => [
+                        'Não é possível excluir este funcionário pois ele possui reservas vinculadas.',
+                        'Para manter a integridade dos dados, você pode desativar o funcionário em vez de excluí-lo.',
+                        'Ou primeiro remova/transfira todas as reservas vinculadas a este funcionário.'
+                    ],
+                    'tem_vinculo' => true
+                ];
+            }
+
             $this->db->beginTransaction();
 
             $this->funcionario->setIdPessoa($id);
@@ -193,10 +236,23 @@ class FuncionarioController {
             }
 
             $this->db->commit();
-            return ['sucesso' => true, 'mensagem' => 'Funcionario excluído!'];
+            return ['sucesso' => true, 'mensagem' => 'Funcionario excluído com sucesso!'];
         } catch (Exception $e) {
             $this->db->rollBack();
-            return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
+            
+            // Detectar erro de chave estrangeira
+            if (strpos($e->getMessage(), '1451') !== false || strpos($e->getMessage(), 'foreign key constraint') !== false) {
+                return [
+                    'sucesso' => false, 
+                    'erros' => [
+                        'Não é possível excluir este funcionário pois ele possui vínculos no sistema.',
+                        'Verifique se existem reservas ou outros registros associados a este funcionário.'
+                    ],
+                    'tem_vinculo' => true
+                ];
+            }
+            
+            return ['sucesso' => false, 'erros' => ['Erro ao excluir: ' . $e->getMessage()]];
         }
     }
 }

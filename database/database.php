@@ -8,7 +8,7 @@ class Database {
     private $host = "localhost";
     private $db_name = "mydb";  
     private $username = "root";  
-    private $password = "bd2025";      
+    private $password = "";      
     private $conn;
     private $charset = "utf8mb4";
 

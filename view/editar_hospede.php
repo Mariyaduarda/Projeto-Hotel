@@ -42,169 +42,389 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros = $resultadoUpdate['erros'];
     }
 }
+
+// Formatar valores para exibição
+$cpfFormatado = $hospede['documento'] ?? $hospede['cpf'] ?? '';
+$telefoneFormatado = $hospede['telefone'] ?? '';
+$cepFormatado = $hospede['cep'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Hóspede</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Editar Hóspede - Palácio Lumière</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .text-muted {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        small.text-muted {
+            margin-top: 8px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background-color: rgba(211, 47, 47, 0.05);
+        }
+
+        small.text-muted i {
+            margin-right: 6px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-10 mx-auto">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="bi bi-pencil"></i> Editar Hóspede</h2>
-                    <a href="listar_hospede.php" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Voltar
-                    </a>
+    <div class="dashboard-wrapper">
+        <!-- Menu Lateral (Sidebar) - igual ao cadastrar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.php"><img src="../assets/img/logo.png" alt="Palácio Lumière Logo"></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="../index.php"><i class="fas fa-tachometer-alt"></i> Painel</a>
                 </div>
-                
+
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-users"></i> Hóspedes</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="cadastrar_hospede.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="listar_hospede.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_hospede.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_hospede.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-briefcase"></i> Funcionários</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="cadastrar_funcionario.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="lista_funcionario.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_funcionario.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_funcionario.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-door-open"></i> Quartos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="cadastrar_quarto.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="lista_quartos.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_quartos.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_quarto.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-calendar-alt"></i> Reservas</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="criar_reserva.php"><i class="fas fa-plus"></i> Nova Reserva</a>
+                        <a href="lista_reservas.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_reserva.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_reserva.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1><i class="fas fa-edit"></i> Editar Hóspede</h1>
+            </header>
+
+            <div class="form-container">
                 <?php if ($mensagem): ?>
-                    <div class="alert alert-success alert-dismissible fade show">
-                        <i class="bi bi-check-circle"></i> <?= htmlspecialchars($mensagem) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="form-alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <div><?= htmlspecialchars($mensagem) ?></div>
                     </div>
                 <?php endif; ?>
 
                 <?php if (!empty($erros)): ?>
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <ul class="mb-0">
-                            <?php foreach ($erros as $erro): ?>
-                                <li><?= htmlspecialchars($erro) ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="form-alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            Erros encontrados:
+                            <ul>
+                                <?php foreach ($erros as $erro): ?>
+                                    <li><?= htmlspecialchars($erro) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
                     </div>
                 <?php endif; ?>
 
                 <form method="POST" action="">
-                    
-                    <h5 class="mt-3 mb-3 border-bottom pb-2">
-                        <i class="bi bi-person"></i> Dados Pessoais
-                    </h5>
+                    <!-- Dados Pessoais -->
+                    <h3 class="form-section-title">
+                        <i class="fas fa-id-card"></i> Dados Pessoais
+                    </h3>
 
-                    <div class="mb-3">
-                        <label for="nome" class="form-label">Nome Completo *</label>
+                    <div class="form-group">
+                        <label for="nome" class="form-label required-field">Nome Completo</label>
                         <input type="text" class="form-control" id="nome" name="nome" 
                                value="<?= htmlspecialchars($hospede['nome']) ?>" required>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="documento" class="form-label">CPF</label>
-                            <input type="text" class="form-control" id="documento" name="documento" 
-                                   placeholder="000.000.000-00"
-                                   value="<?= htmlspecialchars($hospede['documento'] ?? '') ?>">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="documento" class="form-label required-field">CPF</label>
+                                <input type="text" class="form-control" id="documento" name="documento" 
+                                       placeholder="000.000.000-00" maxlength="14"
+                                       value="<?= htmlspecialchars($cpfFormatado) ?>" required>
+                            </div>
                         </div>
 
-                        <div class="col-md-4 mb-3">
-                            <label for="data_nascimento" class="form-label">Data de Nascimento</label>
-                            <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
-                                   value="<?= htmlspecialchars($hospede['data_nascimento'] ?? '') ?>">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento"
+                                       value="<?= htmlspecialchars($hospede['data_nascimento'] ?? '') ?>">
+                            </div>
                         </div>
 
-                        <div class="col-md-4 mb-3">
-                            <label for="sexo" class="form-label">Sexo</label>
-                            <select class="form-select" id="sexo" name="sexo">
-                                <option value="">Selecione...</option>
-                                <option value="M" <?= ($hospede['sexo'] ?? '') == 'M' ? 'selected' : '' ?>>Masculino</option>
-                                <option value="F" <?= ($hospede['sexo'] ?? '') == 'F' ? 'selected' : '' ?>>Feminino</option>
-                                <option value="Outro" <?= ($hospede['sexo'] ?? '') == 'Outro' ? 'selected' : '' ?>>Outro</option>
-                            </select>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="sexo" class="form-label">Sexo</label>
+                                <select class="form-select" id="sexo" name="sexo">
+                                    <option value="">Selecione...</option>
+                                    <option value="M" <?= ($hospede['sexo'] ?? '') == 'M' ? 'selected' : '' ?>>Masculino</option>
+                                    <option value="F" <?= ($hospede['sexo'] ?? '') == 'F' ? 'selected' : '' ?>>Feminino</option>
+                                    <option value="Outro" <?= ($hospede['sexo'] ?? '') == 'Outro' ? 'selected' : '' ?>>Outro</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">E-mail</label>
-                            <input type="email" class="form-control" id="email" name="email"
-                                   value="<?= htmlspecialchars($hospede['email'] ?? '') ?>">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="email" class="form-label required-field">E-mail</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       placeholder="exemplo@email.com"
+                                       value="<?= htmlspecialchars($hospede['email'] ?? '') ?>" required>
+                                <small class="text-muted" id="emailError" style="color: #d32f2f; display: none;">
+                                    <i class="fas fa-exclamation-circle"></i> Email inválido. Deve conter "@"
+                                </small>
+                            </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="telefone" class="form-label">Telefone</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone"
-                                   placeholder="(00) 00000-0000"
-                                   value="<?= htmlspecialchars($hospede['telefone'] ?? '') ?>">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="telefone" class="form-label required-field">Telefone</label>
+                                <input type="text" class="form-control" id="telefone" name="telefone"
+                                       placeholder="(00) 00000-0000" maxlength="15"
+                                       value="<?= htmlspecialchars($telefoneFormatado) ?>" required>
+                            </div>
                         </div>
                     </div>
 
-                    <hr>
+                    <!-- Preferências -->
+                    <h3 class="form-section-title">
+                        <i class="fas fa-star"></i> Preferências e Observações
+                    </h3>
 
-                    <h5 class="mt-3 mb-3 border-bottom pb-2">
-                        <i class="bi bi-star"></i> Preferências e Observações
-                    </h5>
-
-                    <div class="mb-3">
-                        <label for="data_cadastro" class="form-label">Data de Cadastro</label>
-                        <input type="date" class="form-control" id="data_cadastro" name="data_cadastro"
-                               value="<?= htmlspecialchars($hospede['data_cadastro'] ?? date('Y-m-d')) ?>">
-                    </div>
-
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="preferencias" class="form-label">Preferências</label>
                         <textarea class="form-control" id="preferencias" name="preferencias" 
-                                  rows="2" placeholder="Ex: Quarto silencioso, andar alto, vista para o mar..."><?= htmlspecialchars($hospede['preferencias'] ?? '') ?></textarea>
+                                  placeholder="Ex: Quarto silencioso, andar alto, vista para o mar..."><?= htmlspecialchars($hospede['preferencias'] ?? '') ?></textarea>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="observacoes" class="form-label">Observações</label>
                         <textarea class="form-control" id="observacoes" name="observacoes" 
-                                  rows="3" placeholder="Ex: Alergias, restrições alimentares, necessidades especiais..."><?= htmlspecialchars($hospede['observacoes'] ?? '') ?></textarea>
+                                  placeholder="Ex: Alergias, restrições alimentares, necessidades especiais..."><?= htmlspecialchars($hospede['observacoes'] ?? '') ?></textarea>
                     </div>
 
-                    <div class="alert alert-info mt-3">
-                        <i class="bi bi-info-circle"></i> 
-                        <strong>Nota:</strong> Para alterar o endereço, entre em contato com o administrador do sistema.
+                    <!-- Endereço -->
+                    <h3 class="form-section-title">
+                        <i class="fas fa-map-marker-alt"></i> Endereço
+                    </h3>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="cep" class="form-label">CEP</label>
+                                <input type="text" class="form-control" id="cep" name="cep"
+                                       placeholder="00000-000" maxlength="9"
+                                       value="<?= htmlspecialchars($cepFormatado) ?>">
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label for="endereco" class="form-label">Rua/Logradouro</label>
+                                <input type="text" class="form-control" id="endereco" name="endereco"
+                                       value="<?= htmlspecialchars($hospede['logradouro'] ?? '') ?>">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="numero" class="form-label">Número</label>
+                                <input type="text" class="form-control" id="numero" name="numero"
+                                       placeholder="Ex: 123, 45A"
+                                       value="<?= htmlspecialchars($hospede['numero'] ?? '') ?>">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="d-flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-save"></i> Salvar Alterações
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="bairro" class="form-label">Bairro</label>
+                                <input type="text" class="form-control" id="bairro" name="bairro"
+                                       value="<?= htmlspecialchars($hospede['bairro'] ?? '') ?>">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="cidade" class="form-label required-field">Cidade</label>
+                                <input type="text" class="form-control" id="cidade" name="cidade"
+                                       value="<?= htmlspecialchars($hospede['cidade'] ?? '') ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="estado" class="form-label required-field">Estado (UF)</label>
+                                <input type="text" class="form-control" id="estado" name="estado"
+                                       placeholder="Ex: MG" maxlength="2"
+                                       value="<?= htmlspecialchars($hospede['estado'] ?? '') ?>" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="btn-group-actions">
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="fas fa-save"></i> Salvar Alterações
                         </button>
-                        <a href="lista_hospede.php" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Cancelar
+                        <a href="listar_hospede.php" class="btn-secondary-custom">
+                            <i class="fas fa-list"></i> Ver Lista
                         </a>
-                        <button type="button" class="btn btn-danger ms-auto" onclick="confirmarExclusao(<?= $id ?>)">
-                            <i class="bi bi-trash"></i> Excluir Hóspede
+                        <a href="../index.php" class="btn-secondary-custom">
+                            <i class="fas fa-home"></i> Voltar ao Painel
+                        </a>
+                        <button type="button" class="btn-secondary-custom" 
+                                style="background-color: #ffebee; color: #d32f2f; border-color: #ffebee; margin-left: auto;"
+                                onclick="confirmarExclusao(<?= $id ?>, '<?= htmlspecialchars($hospede['nome']) ?>')">
+                            <i class="fas fa-trash"></i> Excluir Hóspede
                         </button>
                     </div>
                 </form>
-
-                <div class="card mt-4">
-                    <div class="card-header bg-light">
-                        <i class="bi bi-geo-alt"></i> Informações de Endereço
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>CEP:</strong> <?= Formatter::formatarCEP($hospede['cep'] ?? null) ?></p>
-                                <p><strong>Logradouro:</strong> <?= htmlspecialchars($hospede['logradouro'] ?? '-') ?></p>
-                                <p><strong>Número:</strong> <?= htmlspecialchars($hospede['numero'] ?? '-') ?></p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Bairro:</strong> <?= htmlspecialchars($hospede['bairro'] ?? '-') ?></p>
-                                <p><strong>Cidade:</strong> <?= htmlspecialchars($hospede['cidade'] ?? '-') ?></p>
-                                <p><strong>Estado:</strong> <?= htmlspecialchars($hospede['estado'] ?? '-') ?></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function confirmarExclusao(id) {
-            if (confirm('⚠️ ATENÇÃO!\n\nTem certeza que deseja EXCLUIR este hóspede?\n\nEsta ação NÃO pode ser desfeita!')) {
-                window.location.href = 'deletar_hospede.php?id=' + id;
-            }
+    function toggleDropdown(element) {
+        const menu = element.nextElementSibling;
+        menu.classList.toggle('show');
+        element.classList.toggle('active');
+    }
+
+    function confirmarExclusao(id, nome) {
+        if (confirm('⚠️ ATENÇÃO!\n\nTem certeza que deseja EXCLUIR o hóspede "' + nome + '"?\n\nEsta ação NÃO pode ser desfeita!')) {
+            window.location.href = 'deletar_hospede.php?id=' + id;
         }
+    }
+
+    // Validação de Email
+    document.getElementById('email').addEventListener('blur', function(e) {
+        const email = e.target.value;
+        const errorSpan = document.getElementById('emailError');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (email && !emailRegex.test(email)) {
+            errorSpan.style.display = 'block';
+            e.target.style.borderColor = '#d32f2f';
+            e.target.style.boxShadow = '0 0 0 3px rgba(211, 47, 47, 0.2)';
+        } else {
+            errorSpan.style.display = 'none';
+            e.target.style.borderColor = '#ddd';
+            e.target.style.boxShadow = 'none';
+        }
+    });
+
+    // Validar ao submeter o formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const email = document.getElementById('email').value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (email && !emailRegex.test(email)) {
+            e.preventDefault();
+            document.getElementById('emailError').style.display = 'block';
+            document.getElementById('email').focus();
+        }
+    });
+
+    // Formatação de CPF
+    document.getElementById('documento').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        
+        if (value.length > 9) {
+            value = value.slice(0, 3) + '.' + value.slice(3, 6) + '.' + value.slice(6, 9) + '-' + value.slice(9);
+        } else if (value.length > 6) {
+            value = value.slice(0, 3) + '.' + value.slice(3, 6) + '.' + value.slice(6);
+        } else if (value.length > 3) {
+            value = value.slice(0, 3) + '.' + value.slice(3);
+        }
+        
+        e.target.value = value;
+    });
+
+    // Formatação de Telefone
+    document.getElementById('telefone').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        
+        if (value.length > 10) {
+            value = '(' + value.slice(0, 2) + ') ' + value.slice(2, 7) + '-' + value.slice(7);
+        } else if (value.length > 6) {
+            value = '(' + value.slice(0, 2) + ') ' + value.slice(2, 6) + '-' + value.slice(6);
+        } else if (value.length > 2) {
+            value = '(' + value.slice(0, 2) + ') ' + value.slice(2);
+        } else if (value.length > 0) {
+            value = '(' + value;
+        }
+        
+        e.target.value = value;
+    });
+
+    // Formatação de CEP
+    document.getElementById('cep').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 8) value = value.slice(0, 8);
+        
+        if (value.length > 5) {
+            value = value.slice(0, 5) + '-' + value.slice(5);
+        }
+        
+        e.target.value = value;
+    });
     </script>
 </body>
 </html>

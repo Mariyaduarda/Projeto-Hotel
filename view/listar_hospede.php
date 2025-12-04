@@ -1,161 +1,260 @@
 <?php
+
 require_once __DIR__ . '/../controller/HospedeController.php';
-require_once __DIR__ . '/../utils/Formatter.php';
-require_once __DIR__ . '/../database/Database.php';
 
 use Controller\HospedeController;
 
-$controller = new HospedeController();
-$resultado = $controller->listar();
+session_start();
 
-$hospedes = $resultado['sucesso'] ? $resultado['dados'] : [];
+$mensagem = '';
+$erros = [];
+$hospedes = [];
+
+$controller = new HospedeController();
+
+// Se for DELETE
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+    $resultado = $controller->deletar($_POST['id'] ?? 0);
+    if ($resultado['sucesso']) {
+        $mensagem = $resultado['mensagem'];
+    } else {
+        $erros = $resultado['erros'];
+    }
+}
+
+// Buscar todos os hóspedes
+$resultado = $controller->lista();
+if ($resultado['sucesso']) {
+    $hospedes = $resultado['dados'];
+} else {
+    $erros = $resultado['erros'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Hóspedes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Listar Hóspedes - Palácio Lumière</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        .modal-content {
-            border-radius: 15px;
-            border: none;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        /* Melhorias para mensagens de erro */
+        .form-alert ul {
+            margin: 0;
+            padding-left: 20px;
         }
-        .modal-header {
-            border-bottom: none;
+        
+        .form-alert ul li {
+            margin: 6px 0;
+            line-height: 1.5;
         }
-        .btn {
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        
+        .form-alert strong {
+            display: block;
+            margin-bottom: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-people"></i> Lista de Hóspedes</h2>
-            <div>
-                <a href="cadastrar_hospede.php" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Novo Hóspede
-                </a>
-                <a href="../index.php" class="btn btn-outline-secondary">
-                    <i class="bi bi-house"></i> Menu
-                </a>
+    <div class="dashboard-wrapper">
+        <!-- Menu Lateral (Sidebar) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.php"><img src="../assets/img/logo.png" alt="Palácio Lumière Logo"></a>
             </div>
-        </div>
-
-        <?php if (empty($hospedes)): ?>
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> Nenhum hóspede cadastrado ainda.
-            </div>
-        <?php else: ?>
-            <div class="table-responsive">
-                <table class="table table-hover table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>CPF</th>
-                            <th>Email</th>
-                            <th>Telefone</th>
-                            <th>Cadastro</th>
-                            <th class="text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($hospedes as $hospede): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($hospede['id']) ?></td>
-                                <td><?= htmlspecialchars($hospede['nome']) ?></td>
-                                <td><?= Formatter::formatarCPF($hospede['cpf']) ?></td>
-                                <td><?= htmlspecialchars($hospede['email']) ?></td>
-                                <td><?= Formatter::formatarTelefone($hospede['telefone']) ?></td>
-                                <td><?= Formatter::formatarData($hospede['data_criacao']) ?></td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="editar_hospede.php?id=<?= $hospede['id'] ?>" 
-                                           class="btn btn-warning" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <a href="historico_hospede.php?id=<?= $hospede['id'] ?>" 
-                                           class="btn btn-info" title="Histórico">
-                                            <i class="bi bi-clock-history"></i>
-                                        </a>
-                                        <button onclick="confirmarExclusao(<?= $hospede['id'] ?>, '<?= htmlspecialchars($hospede['nome'], ENT_QUOTES) ?>')" 
-                                                class="btn btn-danger" title="Excluir">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="alert alert-light">
-                <strong>Total:</strong> <?= count($hospedes) ?> hóspede(s) cadastrado(s)
-            </div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Modal de Confirmação Soft -->
-    <div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="../index.php"><i class="fas fa-tachometer-alt"></i> Painel</a>
                 </div>
-                <div class="modal-body text-center px-5 pb-4">
-                    <div class="mb-4">
-                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+
+                <!-- Hóspedes Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-users"></i> Hóspedes</span>
+                        <i class="fas fa-chevron-down"></i>
                     </div>
-                    <h5 class="mb-3">Tem certeza?</h5>
-                    <p class="text-muted mb-2">
-                        Você está prestes a excluir o hóspede:
-                    </p>
-                    <p class="fw-bold mb-3" id="nomeHospede"></p>
-                    <p class="text-muted small mb-4">
-                        <i class="bi bi-info-circle"></i> Esta ação não pode ser desfeita!
-                        <br>
-                        Não será possível excluir se houver reservas ativas.
-                    </p>
-                    <div class="d-flex gap-2 justify-content-center">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-danger px-4" id="btnConfirmarExclusao">
-                            <i class="bi bi-trash"></i> Sim, excluir
-                        </button>
+                    <div class="dropdown-menu">
+                        <a href="cadastrar_hospede.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="listar_hospede.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_hospede.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_hospede.php"><i class="fas fa-trash"></i> Deletar</a>
                     </div>
                 </div>
+
+                <!-- Funcionários Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-briefcase"></i> Funcionários</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="cadastrar_funcionario.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="lista_funcionario.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_funcionario.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_funcionario.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <!-- Quartos Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-door-open"></i> Quartos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="cadastrar_quarto.php"><i class="fas fa-plus"></i> Cadastrar</a>
+                        <a href="lista_quartos.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_quartos.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_quarto.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+
+                <!-- Reservas Dropdown -->
+                <div class="nav-item">
+                    <div class="dropdown-toggle" onclick="toggleDropdown(this)">
+                        <span><i class="fas fa-calendar-alt"></i> Reservas</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="criar_reserva.php"><i class="fas fa-plus"></i> Nova Reserva</a>
+                        <a href="lista_reservas.php"><i class="fas fa-list"></i> Listar</a>
+                        <a href="editar_reserva.php"><i class="fas fa-edit"></i> Editar</a>
+                        <a href="deletar_reserva.php"><i class="fas fa-trash"></i> Deletar</a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1><i class="fas fa-list"></i> Listar Hóspedes</h1>
+            </header>
+
+            <div class="form-container">
+                <?php if ($mensagem): ?>
+                    <div class="form-alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <div><?= htmlspecialchars($mensagem) ?></div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($erros)): ?>
+                    <div class="form-alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <?php if (count($erros) === 1): ?>
+                                <?= htmlspecialchars($erros[0]) ?>
+                            <?php else: ?>
+                                <strong>Atenção:</strong>
+                                <ul style="margin-top: 8px;">
+                                    <?php foreach ($erros as $erro): ?>
+                                        <li><?= htmlspecialchars($erro) ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Botões de Ação -->
+                <div class="btn-group-actions" style="margin-bottom: 30px;">
+                    <a href="cadastrar_hospede.php" class="btn-primary-custom">
+                        <i class="fas fa-plus-circle"></i> Novo Hóspede
+                    </a>
+                    <a href="../index.php" class="btn-secondary-custom">
+                        <i class="fas fa-home"></i> Voltar ao Painel
+                    </a>
+                </div>
+
+                <!-- Tabela de Hóspedes -->
+                <?php if (!empty($hospedes)): ?>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-hashtag"></i> ID</th>
+                                    <th><i class="fas fa-user"></i> Nome</th>
+                                    <th><i class="fas fa-id-card"></i> CPF</th>
+                                    <th><i class="fas fa-envelope"></i> Email</th>
+                                    <th><i class="fas fa-phone"></i> Telefone</th>
+                                    <th><i class="fas fa-calendar"></i> Data Nasc.</th>
+                                    <th class="text-center"><i class="fas fa-cog"></i> Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($hospedes as $hospede): ?>
+                                    <tr>
+                                        <td class="text-center"><?= htmlspecialchars($hospede['id'] ?? $hospede['id_pessoa'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($hospede['nome'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($hospede['documento'] ?? $hospede['cpf'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($hospede['email'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($hospede['telefone'] ?? '') ?></td>
+                                        <td class="text-center">
+                                            <?php 
+                                            if (!empty($hospede['data_nascimento'])) {
+                                                echo date('d/m/Y', strtotime($hospede['data_nascimento']));
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td class="table-actions">
+                                            <a href="editar_hospede.php?id=<?= $hospede['id'] ?? $hospede['id_pessoa'] ?>" 
+                                               class="btn-action btn-edit" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="" style="display: inline;" 
+                                                  onsubmit="return confirmarExclusao('<?= htmlspecialchars($hospede['nome']) ?>');">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="id" value="<?= $hospede['id'] ?? $hospede['id_pessoa'] ?>">
+                                                <button type="submit" class="btn-action btn-delete" title="Deletar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-footer">
+                        <p>Total de hóspedes: <strong><?= count($hospedes) ?></strong></p>
+                    </div>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Nenhum hóspede cadastrado</h3>
+                        <p>Comece a adicionar hóspedes ao seu hotel.</p>
+                        <a href="cadastrar_hospede.php" class="btn-primary-custom">
+                            <i class="fas fa-plus-circle"></i> Cadastrar Primeiro Hóspede
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
-        </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluir'));
-        let hospedeIdParaExcluir = null;
-
-        function confirmarExclusao(id, nome) {
-            hospedeIdParaExcluir = id;
-            document.getElementById('nomeHospede').textContent = nome;
-            modalExcluir.show();
-        }
-
-        document.getElementById('btnConfirmarExclusao').addEventListener('click', function() {
-            if (hospedeIdParaExcluir) {
-                window.location.href = 'deletar_hospede.php?id=' + hospedeIdParaExcluir;
-            }
-        });
+    function toggleDropdown(element) {
+        const menu = element.nextElementSibling;
+        menu.classList.toggle('show');
+        element.classList.toggle('active');
+    }
+    
+    function confirmarExclusao(nomeHospede) {
+        return confirm(
+            'ATENÇÃO: Tem certeza que deseja deletar o hóspede "' + nomeHospede + '"?\n\n' +
+            '⚠️ Esta ação NÃO pode ser desfeita!\n\n' +
+            '⚠️ Se este hóspede tiver reservas vinculadas, a exclusão será bloqueada.\n\n' +
+            'Clique em OK para confirmar a exclusão.'
+        );
+    }
     </script>
 </body>
-</html>
+</html

@@ -2,59 +2,64 @@
 
 namespace Controller;
 
-require_once __DIR__ . '/../model/Reserva.php';
-require_once __DIR__ . '/../model/Quarto.php';
 require_once __DIR__ . '/../database/Database.php';
+
+use PDO;
+use Exception;
+use database\Database;
 
 class ReservaController {
     private $db;
-    private $reserva;
-    private $quarto;
 
     public function __construct() {
         $database = new Database();
         $this->db = $database->getConnection();
-        $this->reserva = new Reserva($this->db);
-        $this->quarto = new Quarto($this->db);
     }
 
     // CREATE
     public function criar(array $dados): array {
         try {
-            $this->reserva->setHospedeId((int)$dados['hospede_id']);
-            $this->reserva->setQuartoId((int)$dados['quarto_id']);
-            $this->reserva->setFuncionarioId((int)$dados['funcionario_id']);
-            $this->reserva->setDataCheckin($dados['data_checkin']);
-            $this->reserva->setDataCheckout($dados['data_checkout']);
-            $this->reserva->setNumHospedes((int)$dados['num_hospedes']);
-            $this->reserva->setStatus($dados['status'] ?? 'pendente');
-            $this->reserva->setObservacoes($dados['observacoes'] ?? null);
-
-            // Buscar preco do quarto e calcular valor total
-            $this->quarto->setId((int)$dados['quarto_id']);
-            if ($this->quarto->readOne()) {
-                $preco_diaria = $this->quarto->getPrecoDiaria();
-                $valor_total = $this->reserva->calcularValorTotal($preco_diaria);
-                $this->reserva->setValorTotal($valor_total);
-            } else {
-                return ['sucesso' => false, 'erros' => ['Quarto nao encontrado.']];
-            }
-
-            $erros = $this->reserva->validar();
+            // Calcular valor total
+            $checkin = new \DateTime($dados['data_checkin']);
+            $checkout = new \DateTime($dados['data_checkout']);
+            $noites = $checkout->diff($checkin)->days;
             
-            if (!empty($erros)) {
-                return ['sucesso' => false, 'erros' => $erros];
+            if ($noites < 1) {
+                return ['sucesso' => false, 'erros' => ['O checkout deve ser posterior ao checkin.']];
             }
-
-            if ($this->reserva->create()) {
-                return [
-                    'sucesso' => true, 
-                    'mensagem' => 'Reserva criada com sucesso!',
-                    'valor_total' => $valor_total
-                ];
+            
+            // Buscar preço do quarto
+            $sqlQuarto = "SELECT valor_diaria FROM quarto WHERE id_quarto = ?";
+            $stmtQuarto = $this->db->prepare($sqlQuarto);
+            $stmtQuarto->execute([$dados['quarto_id']]);
+            $quarto = $stmtQuarto->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$quarto) {
+                return ['sucesso' => false, 'erros' => ['Quarto não encontrado.']];
             }
+            
+            $valor_total = $quarto['valor_diaria'] * $noites;
+            
+            $sql = "INSERT INTO reserva (valor_reserva, data_reserva, data_checkin_previsto, data_checkout_previsto, status, id_funcionario, id_hospede, id_quarto) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $valor_total,
+                date('Y-m-d'),
+                $dados['data_checkin'],
+                $dados['data_checkout'],
+                $dados['status'] ?? 'pendente',
+                $dados['funcionario_id'],
+                $dados['hospede_id'],
+                $dados['quarto_id']
+            ]);
 
-            return ['sucesso' => false, 'erros' => ['Erro ao criar reserva.']];
+            return [
+                'sucesso' => true, 
+                'mensagem' => 'Reserva criada com sucesso!',
+                'valor_total' => $valor_total
+            ];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -63,24 +68,45 @@ class ReservaController {
     // READ ALL
     public function lista(): array {
         try {
-            $stmt = $this->reserva->read();
+            $sql = "SELECT r.*, h.nome as hospede_nome, q.numero as quarto_numero, f.nome as funcionario_nome 
+                    FROM reserva r
+                    LEFT JOIN hospede ho ON r.id_hospede = ho.id_pessoa
+                    LEFT JOIN pessoa h ON ho.id_pessoa = h.id_pessoa
+                    LEFT JOIN quarto q ON r.id_quarto = q.id_quarto
+                    LEFT JOIN funcionario fu ON r.id_funcionario = fu.id_pessoa
+                    LEFT JOIN pessoa f ON fu.id_pessoa = f.id_pessoa
+                    ORDER BY r.data_checkin_previsto DESC";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
             $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
             return ['sucesso' => true, 'dados' => $reservas];
         } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro ao lista reservas: ' . $e->getMessage()]];
+            return ['sucesso' => false, 'erros' => ['Erro ao listar reservas: ' . $e->getMessage()]];
         }
     }
 
     // READ ONE
     public function buscarPorId(int $id): array {
         try {
-            $this->reserva->setId($id);
+            $sql = "SELECT r.*, h.nome as hospede_nome, q.numero as quarto_numero, f.nome as funcionario_nome 
+                    FROM reserva r
+                    LEFT JOIN hospede ho ON r.id_hospede = ho.id_pessoa
+                    LEFT JOIN pessoa h ON ho.id_pessoa = h.id_pessoa
+                    LEFT JOIN quarto q ON r.id_quarto = q.id_quarto
+                    LEFT JOIN funcionario fu ON r.id_funcionario = fu.id_pessoa
+                    LEFT JOIN pessoa f ON fu.id_pessoa = f.id_pessoa
+                    WHERE r.idreserva = ?";
             
-            if ($this->reserva->readOne()) {
-                return ['sucesso' => true, 'dados' => $this->reserva->toArray()];
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
+            $reserva = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($reserva) {
+                return ['sucesso' => true, 'dados' => $reserva];
             }
-
-            return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
+            return ['sucesso' => false, 'erros' => ['Reserva não encontrada.']];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -89,40 +115,16 @@ class ReservaController {
     // UPDATE
     public function atualizar(int $id, array $dados): array {
         try {
-            $this->reserva->setId($id);
-            
-            if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
-            }
+            $sql = "UPDATE reserva SET status = ?, data_checkin_previsto = ?, data_checkout_previsto = ? WHERE idreserva = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $dados['status'],
+                $dados['data_checkin'],
+                $dados['data_checkout'],
+                $id
+            ]);
 
-            $this->reserva->setHospedeId((int)$dados['hospede_id']);
-            $this->reserva->setQuartoId((int)$dados['quarto_id']);
-            $this->reserva->setFuncionarioId((int)$dados['funcionario_id']);
-            $this->reserva->setDataCheckin($dados['data_checkin']);
-            $this->reserva->setDataCheckout($dados['data_checkout']);
-            $this->reserva->setNumHospedes((int)$dados['num_hospedes']);
-            $this->reserva->setStatus($dados['status']);
-            $this->reserva->setObservacoes($dados['observacoes'] ?? null);
-
-            // Recalcular valor total
-            $this->quarto->setId((int)$dados['quarto_id']);
-            if ($this->quarto->readOne()) {
-                $preco_diaria = $this->quarto->getPrecoDiaria();
-                $valor_total = $this->reserva->calcularValorTotal($preco_diaria);
-                $this->reserva->setValorTotal($valor_total);
-            }
-
-            $erros = $this->reserva->validar();
-            
-            if (!empty($erros)) {
-                return ['sucesso' => false, 'erros' => $erros];
-            }
-
-            if ($this->reserva->update()) {
-                return ['sucesso' => true, 'mensagem' => 'Reserva atualizada com sucesso!'];
-            }
-
-            return ['sucesso' => false, 'erros' => ['Erro ao atualizar reserva.']];
+            return ['sucesso' => true, 'mensagem' => 'Reserva atualizada com sucesso!'];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -131,17 +133,11 @@ class ReservaController {
     // DELETE
     public function deletar(int $id): array {
         try {
-            $this->reserva->setId($id);
-            
-            if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
-            }
+            $sql = "DELETE FROM reserva WHERE idreserva = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
-            if ($this->reserva->delete()) {
-                return ['sucesso' => true, 'mensagem' => 'Reserva excluída com sucesso!'];
-            }
-
-            return ['sucesso' => false, 'erros' => ['Apenas reservas pendentes ou canceladas podem ser excluídas.']];
+            return ['sucesso' => true, 'mensagem' => 'Reserva excluída com sucesso!'];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -150,17 +146,11 @@ class ReservaController {
     // CANCELAR RESERVA
     public function cancelar(int $id): array {
         try {
-            $this->reserva->setId($id);
-            
-            if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
-            }
+            $sql = "UPDATE reserva SET status = 'cancelada' WHERE idreserva = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
-            if ($this->reserva->cancelar()) {
-                return ['sucesso' => true, 'mensagem' => 'Reserva cancelada com sucesso!'];
-            }
-
-            return ['sucesso' => false, 'erros' => ['Erro ao cancelar reserva.']];
+            return ['sucesso' => true, 'mensagem' => 'Reserva cancelada com sucesso!'];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -169,17 +159,11 @@ class ReservaController {
     // CONFIRMAR RESERVA
     public function confirmar(int $id): array {
         try {
-            $this->reserva->setId($id);
-            
-            if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
-            }
+            $sql = "UPDATE reserva SET status = 'confirmada' WHERE idreserva = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
-            if ($this->reserva->confirmar()) {
-                return ['sucesso' => true, 'mensagem' => 'Reserva confirmada com sucesso!'];
-            }
-
-            return ['sucesso' => false, 'erros' => ['Erro ao confirmar reserva.']];
+            return ['sucesso' => true, 'mensagem' => 'Reserva confirmada com sucesso!'];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
@@ -188,37 +172,11 @@ class ReservaController {
     // CONCLUIR RESERVA (CHECKOUT)
     public function concluir(int $id): array {
         try {
-            $this->reserva->setId($id);
-            
-            if (!$this->reserva->readOne()) {
-                return ['sucesso' => false, 'erros' => ['Reserva nao encontrada.']];
-            }
+            $sql = "UPDATE reserva SET status = 'finalizada' WHERE idreserva = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
 
-            if ($this->reserva->concluir()) {
-                return ['sucesso' => true, 'mensagem' => 'Check-out realizado com sucesso!'];
-            }
-
-            return ['sucesso' => false, 'erros' => ['Erro ao concluir reserva.']];
-        } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
-        }
-    }
-
-    // LISTAR POR PERÍODO
-    public function listaPorPeriodo(string $data_inicio, string $data_fim): array {
-        try {
-            $reservas = $this->reserva->listaPorPeriodo($data_inicio, $data_fim);
-            return ['sucesso' => true, 'dados' => $reservas];
-        } catch (Exception $e) {
-            return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
-        }
-    }
-
-    // LISTAR POR STATUS
-    public function listaPorStatus(string $status): array {
-        try {
-            $reservas = $this->reserva->listaPorStatus($status);
-            return ['sucesso' => true, 'dados' => $reservas];
+            return ['sucesso' => true, 'mensagem' => 'Check-out realizado com sucesso!'];
         } catch (Exception $e) {
             return ['sucesso' => false, 'erros' => ['Erro: ' . $e->getMessage()]];
         }
