@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../Database.php';
 
+use database\Database;
+
 $db = new Database();
 $conn = $db->getConnection();
 

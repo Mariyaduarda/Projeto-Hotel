@@ -1,8 +1,15 @@
 <?php
 require_once __DIR__ . '/../Database.php';
 
+use database\Database;
+
 $db = new Database();
 $conn = $db->getConnection();
+
+// Limpa a tabela e reseta IDs
+$conn->exec("SET FOREIGN_KEY_CHECKS = 0");
+$conn->exec("TRUNCATE TABLE pessoa");
+$conn->exec("SET FOREIGN_KEY_CHECKS = 1");
 
 $sql = "
     INSERT INTO pessoa (nome, sexo, data_nascimento, documento, telefone, email, tipo_pessoa, endereco_id_endereco) VALUES
@@ -23,7 +30,7 @@ $sql = "
     ('Larissa Santos Barros', 'F', '1989-07-15', '444.555.666-77', '(37) 99999-0006', 'larissa.barros@email.com', 'hospede', 14),
     ('Thiago Oliveira Melo', 'M', '1983-11-28', '555.666.777-88', '(37) 99999-0007', 'thiago.melo@email.com', 'hospede', 15),
 
-
+    -- Funcionários
     ('Pedro Henrique Souza', 'M', '1990-05-20', '100.200.300-40', '(37) 98888-0001', 'pedro.souza@hotel.com', 'funcionario', 1),
     ('Amanda Silva Costa', 'F', '1992-08-15', '200.300.400-50', '(37) 98888-0002', 'amanda.costa@hotel.com', 'funcionario', 2),
     ('Rafael Oliveira Dias', 'M', '1988-03-10', '300.400.500-60', '(37) 98888-0003', 'rafael.dias@hotel.com', 'funcionario', 3),
@@ -37,4 +44,5 @@ $sql = "
 ";
 
 $conn->exec($sql);
+
 echo "Tabela pessoa povoada com sucesso.\n";

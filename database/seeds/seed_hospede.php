@@ -1,8 +1,15 @@
 <?php
 require_once __DIR__ . '/../Database.php';
 
+use database\Database;
+
 $db = new Database();
 $conn = $db->getConnection();
+
+// Limpa a tabela hospede antes de inserir
+$conn->exec("SET FOREIGN_KEY_CHECKS = 0");
+$conn->exec("TRUNCATE TABLE hospede");
+$conn->exec("SET FOREIGN_KEY_CHECKS = 1");
 
 $sql = "
 INSERT INTO hospede (id_pessoa, preferencias, historico) VALUES

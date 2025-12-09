@@ -12,10 +12,10 @@ try {
     
     // Verifica se houve erro na conexão
     if ($connection->connect_error) {
-        die("❌ Erro de conexão: " . $connection->connect_error);
+        die(" Erro de conexão: " . $connection->connect_error);
     }
     
-    echo "✅ Conexão ao banco de dados estabelecida com sucesso!<br>";
+    echo " Conexão ao banco de dados estabelecida com sucesso!<br>";
     echo "📊 Banco de dados: <strong>" . $database . "</strong><br>";
     echo "🖥️ Host: <strong>" . $host . "</strong><br><br>";
     
@@ -44,9 +44,9 @@ try {
     }
     
     $connection->close();
-    echo "<br>✅ Conexão fechada com sucesso!";
+    echo "<br> Conexão fechada com sucesso!";
     
 } catch (Exception $e) {
-    echo "❌ Erro: " . $e->getMessage();
+    echo " Erro: " . $e->getMessage();
 }
 ?>

@@ -1,24 +1,36 @@
 <?php
 require_once __DIR__ . '/../Database.php';
 
+use database\Database;
+
 $db = new Database();
 $conn = $db->getConnection();
 
-$sql = "
-    INSERT INTO funcionario (id_pessoa, cargo, salario, data_contratacao, numero_ctps, turno) VALUES
-    (16, 'Recepcionista', 2500.00, '2023-01-15', 123456, 'Manhã'),
-    (17, 'Recepcionista', 2500.00, '2023-03-20', 234567, 'Tarde'),
-    (18, 'Gerente', 5500.00, '2022-06-10', 345678, 'Integral'),
-    (19, 'Camareira', 1800.00, '2023-05-05', 456789, 'Manhã'),
-    (20, 'Camareiro', 1800.00, '2023-07-12', 567890, 'Tarde'),
-    (21, 'Concierge', 3000.00, '2022-11-20', 678901, 'Noite'),
-    (22, 'Supervisor de Limpeza', 3200.00, '2022-09-15', 789012, 'Manhã'),
-    (23, 'Atendente de Reservas', 2200.00, '2023-02-28', 890123, 'Integral'),
-    (24, 'Auxiliar Administrativo', 2000.00, '2023-08-10', 901234, 'Tarde'),
-    (25, 'Coordenador de Eventos', 4000.00, '2022-12-01', 012345, 'Integral');
+try {
+    // Limpa a tabela funcionario
+    $conn->exec("SET FOREIGN_KEY_CHECKS = 0");
+    $conn->exec("TRUNCATE TABLE funcionario");
+    $conn->exec("SET FOREIGN_KEY_CHECKS = 1");
 
-";
+    // Insere os funcionários
+    $sql = "
+    INSERT INTO funcionario (id_pessoa, cargo, salario, data_contratacao, numero_ctps, turno)
+    VALUES
+    (16, 'Gerente', 8500.00, '2021-03-15', 123456, 'Integral'),
+    (17, 'Assistente Administrativo', 3200.00, '2022-07-10', 234567, 'Manhã'),
+    (18, 'Recepcionista', 2500.00, '2023-01-05', 345678, 'Tarde'),
+    (19, 'Técnico de Som', 4200.50, '2020-11-20', 456789, 'Noite'),
+    (20, 'Produtor de Eventos', 5300.00, '2021-09-01', 567890, 'Integral'),
+    (21, 'Auxiliar de Limpeza', 1800.00, '2024-02-12', 678901, 'Manhã'),
+    (22, 'Segurança', 3100.00, '2022-04-18', 789012, 'Noite'),
+    (23, 'Fotógrafo', 4500.00, '2023-09-30', 801234, 'Eventos'),
+    (24, 'Camaroteiro', 2700.00, '2024-06-01', 912345, 'Tarde'),
+    (25, 'Designer Gráfico', 4000.00, '2021-12-22', 102345, 'Manhã');
+    ";
 
-$conn->exec($sql);
+    $conn->exec($sql);
+    echo " Tabela funcionario povoada com sucesso.\n";
 
-echo "Tabela hospede povoada com sucesso.\n";
+} catch (Exception $e) {
+    echo " Erro ao popular tabela funcionario: " . $e->getMessage() . "\n";
+}
